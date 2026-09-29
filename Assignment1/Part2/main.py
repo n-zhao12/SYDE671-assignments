@@ -74,13 +74,13 @@ def process_image(image_path, metric="ncc", edge_fraction=0.05):
 
 
 if __name__ == "__main__":
-    alignment_metric = "weighted_ncc"
+    alignment_metric = "ncc"
     edge_fraction = 0.05
-    input_dir = Path("self_picked_images")
+    input_dir = Path("images")
     output_folders = {
         "ncc": "raw_ncc_5pct_results",
         "gradient_ncc": "gradient_ncc_results",
-        "weighted_ncc": "texture_weighted_ncc_results",
+        "weighted_ncc": "texture_weighted_ncc_results_new",
         "l2": "l2_results",
     }
     output_dir = Path(output_folders[alignment_metric])
