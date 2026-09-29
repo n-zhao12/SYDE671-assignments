@@ -61,8 +61,11 @@
                 <article class="card">
                     <h3>Single-scale baseline</h3>
                     <p>For each candidate translation, compare the reference and shifted channel. Raw NCC mean-centers
-                        the regions and scores their normalized dot product; L2 is the Euclidean pixel difference. NCC
-                        is maximized; L2 is minimized.</p>
+                        the image regions and scores their normalized dot product; the best-scoring translation is
+                        selected.</p>
+                    <p>We chose NCC because the separate filtered exposures can have different brightness levels.
+                        Mean-centering and normalization make the score focus more on shared image structure than on
+                        absolute intensity.</p>
                     <p><span class="tag">Single-scale NCC outputs available for two low-resolution images</span></p>
                 </article>
                 <article class="card">
@@ -81,9 +84,8 @@
         <section class="section" id="single-scale-results">
             <div class="section-heading">
                 <h2>Single-scale alignment · low-resolution images</h2>
-                <p>These outputs show the exhaustive single-scale alignment using raw NCC on the low-resolution JPEG
-                    examples. Only the two results currently present in the single-scale output folder are shown here.
-                </p>
+                <p>These outputs show the exhaustive single-scale alignment using raw NCC on two low-resolution
+                    JPEG examples.</p>
             </div>
             <div class="gallery">
                 <figure><a
@@ -224,122 +226,143 @@
         </section>
         <section class="section">
             <div class="section-heading">
-                <h2>Selected collection images · texture-weighted NCC</h2>
-                <p>These three additional Prokudin-Gorskii plates were processed with the texture-weighted NCC version
-                    of the pyramid algorithm. Each caption reports the green and red shifts applied relative to blue.
+                <h2>Selected collection images · raw NCC with 5% edge exclusion</h2>
+                <p>These three additional Prokudin-Gorskii plates were processed with our selected pyramid/raw-NCC
+                    method and 5% edge exclusion. Captions report the shifts applied to green and red relative to blue.
                 </p>
             </div>
             <div class="gallery">
                 <figure><a
-                        href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00279v_result.jpg"><img
-                            src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00279v_result.jpg"
-                            alt="Texture-weighted NCC result for 00279v" loading="lazy"></a>
-                    <figcaption>00279v · G shift (weighted NCC): (1, 3)<br>R shift (weighted NCC): (2, 12)</figcaption>
+                        href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00279v_result.jpg"><img
+                            src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00279v_result.jpg"
+                            alt="Raw NCC with 5 percent edge exclusion result for 00279v" loading="lazy"></a>
+                    <figcaption>00279v · G shift (NCC): (1, 3)<br>R shift (NCC): (2, 12)</figcaption>
                 </figure>
                 <figure><a
-                        href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00470v_result.jpg"><img
-                            src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00470v_result.jpg"
-                            alt="Texture-weighted NCC result for 00470v" loading="lazy"></a>
-                    <figcaption>00470v · G shift (weighted NCC): (−2, 6)<br>R shift (weighted NCC): (−5, 12)
+                        href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00470v_result.jpg"><img
+                            src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00470v_result.jpg"
+                            alt="Raw NCC with 5 percent edge exclusion result for 00470v" loading="lazy"></a>
+                    <figcaption>00470v · G shift (NCC): (−2, 6)<br>R shift (NCC): (−5, 12)
                     </figcaption>
                 </figure>
                 <figure><a
-                        href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/02180v_result.jpg"><img
-                            src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/02180v_result.jpg"
-                            alt="Texture-weighted NCC result for 02180v" loading="lazy"></a>
-                    <figcaption>02180v · G shift (weighted NCC): (−2, 1)<br>R shift (weighted NCC): (−3, 1)</figcaption>
+                        href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/02180v_result.jpg"><img
+                            src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/02180v_result.jpg"
+                            alt="Raw NCC with 5 percent edge exclusion result for 02180v" loading="lazy"></a>
+                    <figcaption>02180v · G shift (NCC): (−2, 1)<br>R shift (NCC): (−3, 1)</figcaption>
                 </figure>
             </div>
         </section>
         <section class="section">
             <div class="section-heading">
                 <h2>Bells &amp; whistles</h2>
-                <p><strong>Implemented:</strong> Automatic contrast rescales each final image so its overall minimum
-                    becomes 0 and maximum becomes 255. For alignment, gradient NCC compares Sobel gradient magnitudes;
-                    texture-weighted NCC uses the blue reference's Sobel magnitude to give detailed pixels greater
-                    weight while comparing the original intensity values. These are optional alignment metrics; the
-                    three selected examples above use texture-weighted NCC.</p>
-                <p><strong>Crop limitation:</strong> After alignment, the program crops to the region shared by all
-                    shifted channels so no wrapped pixels remain. The 5% edge exclusion is applied only when scoring
-                    candidate shifts. This does <em>not</em> detect and remove the original plate's dark or light frame,
-                    as described in the assignment's automatic-cropping suggestion. White balance and a separate
-                    color-channel mapping are not implemented.</p>
-                <p>The comparison below shows the same images produced with raw NCC (before) and texture-weighted NCC
-                    (after); it compares alignment metrics, not an unprocessed scan against a fully restored image.
-                    Differences are modest here, so the weighted metric is presented as an experiment rather than a
-                    guaranteed improvement.</p>
+                <p>Starting with raw NCC, we explored ways to make channel alignment less sensitive to distracting
+                    borders and to emphasize useful image structure. The selected improvement was a 5% edge exclusion;
+                    we then tested two alternative NCC feature strategies. All final images are also cropped to their
+                    shared valid area and automatically contrast-stretched to the 0–255 range. Each comparison uses
+                    the same three images—00458u, 01007a, and 01657u. Click a preview to open its full-resolution
+                    version, then zoom in with your browser to inspect alignment details.</p>
             </div>
-            <div class="grid">
-                <article class="card">
-                    <h3>00458u</h3>
-                    <div class="gallery">
-                        <figure><a
-                                href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"><img
-                                    src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"
-                                    alt="00458u colorization using raw NCC" loading="lazy"></a>
-                            <figcaption>Before · raw NCC</figcaption>
-                        </figure>
-                        <figure><a
-                                href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00458u_result.jpg"><img
-                                    src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00458u_result.jpg"
-                                    alt="00458u colorization using texture-weighted NCC" loading="lazy"></a>
-                            <figcaption>After · texture-weighted NCC</figcaption>
-                        </figure>
-                    </div>
-                </article>
-                <article class="card">
-                    <h3>01007a</h3>
-                    <div class="gallery">
-                        <figure><a
-                                href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"><img
-                                    src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"
-                                    alt="01007a colorization using raw NCC" loading="lazy"></a>
-                            <figcaption>Before · raw NCC</figcaption>
-                        </figure>
-                        <figure><a
-                                href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01007a_result.jpg"><img
-                                    src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01007a_result.jpg"
-                                    alt="01007a colorization using texture-weighted NCC" loading="lazy"></a>
-                            <figcaption>After · texture-weighted NCC</figcaption>
-                        </figure>
-                    </div>
-                </article>
-                <article class="card">
-                    <h3>01657u</h3>
-                    <div class="gallery">
-                        <figure><a
-                                href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"><img
-                                    src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"
-                                    alt="01657u colorization using raw NCC" loading="lazy"></a>
-                            <figcaption>Before · raw NCC</figcaption>
-                        </figure>
-                        <figure><a
-                                href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01657u_result.jpg"><img
-                                    src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01657u_result.jpg"
-                                    alt="01657u colorization using texture-weighted NCC" loading="lazy"></a>
-                            <figcaption>After · texture-weighted NCC</figcaption>
-                        </figure>
-                    </div>
-                </article>
-            </div>
+            <article class="card section">
+                <h3><strong>1. Add 5% edge exclusion — final selected method</strong></h3>
+                <p><strong>What it does:</strong> At every candidate translation, NCC is computed only on the valid
+                    overlap after ignoring a 5% margin along its edges. The image channels themselves are not
+                    pre-cropped by this margin; it changes which pixels contribute to the alignment score.</p>
+                <p><strong>Why we tried it:</strong> Plate frames and channel borders can have unusual or mismatched
+                    intensities. If included, these pixels may dominate the score even though they are not useful scene
+                    features. Ignoring a small edge band lets NCC focus more on the interior image content.</p>
+                <p><strong>Observed result:</strong> The 5% setting produced better alignments than scoring all the
+                    way to the overlap edges in our comparisons, so we selected raw NCC with 5% edge exclusion for the
+                    main results.</p>
+                    <h4>No exclusion vs. 5% exclusion · two-image comparison</h4>
+                <div class="comparison-grid">
+                    <div class="comparison-item"><h5>00458u</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/00458u_result.jpg" alt="00458u raw NCC without edge exclusion" loading="lazy"></a><figcaption>Raw NCC · no exclusion</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg" alt="00458u raw NCC with 5 percent edge exclusion" loading="lazy"></a><figcaption>Raw NCC · 5% exclusion</figcaption></figure>
+                    </div></div>
+                    <div class="comparison-item"><h5>01007a</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01007a_result.jpg" alt="01007a raw NCC without edge exclusion" loading="lazy"></a><figcaption>Raw NCC · no exclusion</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg" alt="01007a raw NCC with 5 percent edge exclusion" loading="lazy"></a><figcaption>Raw NCC · 5% exclusion</figcaption></figure>
+                    </div></div>
+                    <div class="comparison-item"><h5>01657u</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01657u_result.jpg" alt="01657u raw NCC without edge exclusion" loading="lazy"></a><figcaption>Raw NCC · no exclusion</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg" alt="01657u raw NCC with 5 percent edge exclusion" loading="lazy"></a><figcaption>Raw NCC · 5% exclusion</figcaption></figure>
+                    </div></div>
+                </div>
+            </article>
+            <article class="card section">
+                <p><strong>Building on that improvement, we next tested alternative NCC features:</strong> For these
+                    experiments the edge exclusion remains at 5%, while the data representation used by NCC changes.</p>
+                <h3><strong>2. Gradient-magnitude NCC — negative impact in our tests</strong></h3>
+                <p><strong>What it does:</strong> Sobel filters produce a gradient magnitude image for each channel, and
+                    NCC compares those gradient images instead of the original pixel intensities.</p>
+                <p><strong>Why we tried it:</strong> Edges and gradients describe structural boundaries and may be less
+                    sensitive to brightness differences between the color-filter exposures. We expected matching
+                    structure to help where raw intensity patterns differ.</p>
+                <p><strong>Observed result:</strong> It aligned less reliably than our selected raw-NCC method in the
+                    images reviewed. Gradient magnitude can amplify noise and discards some intensity information, so
+                    the structural signal was not consistently more useful than raw intensities for these plates.</p>
+                    <h4>Selected method vs. gradient NCC · two-image comparison</h4>
+                <div class="comparison-grid">
+                    <div class="comparison-item"><h5>00458u</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg" alt="00458u selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/00458u_result.jpg" alt="00458u gradient NCC result" loading="lazy"></a><figcaption>Gradient NCC</figcaption></figure>
+                    </div></div>
+                    <div class="comparison-item"><h5>01007a</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg" alt="01007a selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01007a_result.jpg" alt="01007a gradient NCC result" loading="lazy"></a><figcaption>Gradient NCC</figcaption></figure>
+                    </div></div>
+                    <div class="comparison-item"><h5>01657u</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg" alt="01657u selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01657u_result.jpg" alt="01657u gradient NCC result" loading="lazy"></a><figcaption>Gradient NCC</figcaption></figure>
+                    </div></div>
+                </div>
+            </article>
+            <article class="card section">
+                <h3><strong>3. Texture-weighted NCC — little visible difference</strong></h3>
+                <p><strong>What it does:</strong> A weight map is computed from Sobel gradient magnitude in the blue
+                    reference. NCC still compares original intensities, but detailed pixels receive higher weights
+                    than smoother areas.</p>
+                <p><strong>Why we tried it:</strong> Distinctive textures and edges can provide strong alignment cues.
+                    We expected emphasizing those regions to reduce the influence of broad, smooth areas and improve
+                    the shift estimate.</p>
+                <p><strong>Observed result:</strong> The outputs looked very similar to selected raw NCC, with no
+                    consistent visible improvement. The unweighted score already aligned the main structures in these
+                    examples, so giving textured regions extra influence did not materially change the result.</p>
+                    <h4>Selected method vs. texture-weighted NCC · two-image comparison</h4>
+                <div class="comparison-grid">
+                    <div class="comparison-item"><h5>00458u</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg" alt="00458u selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00458u_result.jpg" alt="00458u texture-weighted NCC result" loading="lazy"></a><figcaption>Texture-weighted NCC</figcaption></figure>
+                    </div></div>
+                    <div class="comparison-item"><h5>01007a</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg" alt="01007a selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01007a_result.jpg" alt="01007a texture-weighted NCC result" loading="lazy"></a><figcaption>Texture-weighted NCC</figcaption></figure>
+                    </div></div>
+                    <div class="comparison-item"><h5>01657u</h5><div class="comparison-pair">
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg" alt="01657u selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
+                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01657u_result.jpg" alt="01657u texture-weighted NCC result" loading="lazy"></a><figcaption>Texture-weighted NCC</figcaption></figure>
+                    </div></div>
+                </div>
+            </article>
         </section>
         <section class="section">
             <div class="section-heading">
-                <h2>What worked—and what remains</h2>
+                <h2>Takeaways from the experiments</h2>
             </div>
             <div class="grid">
                 <article class="card">
-                    <h3>Strengths</h3>
+                    <h3>Selected method</h3>
                     <p>The pyramid narrows full-resolution search to local refinements. Overlap-aware scoring and edge
                         exclusion reduce false matches from rolled pixels and plate borders. Texture weighting
                         emphasizes detailed regions.</p>
                 </article>
                 <article class="card">
-                    <h3>Limitations and next steps</h3>
-                    <p>Translation-only alignment cannot correct rotation, scale changes, or local warping. Some color
-                        fringing remains around strong edges and plate borders. The provided-image pyramid NCC offsets
-                        are listed above. The low-resolution single-scale NCC/L2 comparison and pyramid L2 results
-                        remain to be added if not already completed.</p>
+                    <h3>Alternative metrics</h3>
+                    <p>Gradient-magnitude NCC and texture-weighted NCC were evaluated against the selected method.
+                        Gradient NCC was less reliable on the examples reviewed, while texture weighting produced
+                        similar-looking results. These comparisons helped confirm raw NCC with 5% edge exclusion as
+                        the method used for the main result set.</p>
                 </article>
             </div>
             <p class="muted">Result previews load from the public GitHub repository. Keep it public or copy the images
@@ -354,6 +377,56 @@
     <footer class="site-footer">
         <div class="container"><a href="../">← Assignment 1</a> · <a href="../Part1/">Part One</a></div>
     </footer>
+    <script>
+        document.querySelectorAll(".comparison-item").forEach((item) => {
+            if (!["00458u", "01657u"].includes(item.querySelector("h5").textContent.trim())) {
+                item.remove();
+                return;
+            }
+            const images = [...item.querySelectorAll(".comparison-pair figure")];
+            const methodTitle = item.closest("article").querySelector("h3").textContent;
+            images.forEach((figure, index) => {
+                const image = figure.querySelector("img");
+                const filename = new URL(image.src).pathname.split("/").pop();
+                const caption = figure.querySelector("figcaption").textContent;
+                let methodFolder;
+                if (caption.includes("no exclusion")) {
+                    methodFolder = "NCC_results";
+                } else if (methodTitle.includes("Gradient")) {
+                    methodFolder = index === 0 ? "raw_ncc_5pct_results" : "gradient_ncc_results";
+                } else if (methodTitle.includes("Texture-weighted")) {
+                    methodFolder = index === 0 ? "raw_ncc_5pct_results" : "texture_weighted_ncc_results";
+                } else {
+                    methodFolder = "raw_ncc_5pct_results";
+                }
+                const localImage = `comparison_images/${methodFolder}/${filename}`;
+                image.src = localImage;
+                figure.querySelector("a").href = localImage;
+            });
+            const details = document.createElement("details");
+            details.className = "detail-zoom";
+            details.innerHTML = "<summary>Show 3× center-detail comparison</summary>";
+
+            const zoomPair = document.createElement("div");
+            zoomPair.className = "zoom-pair";
+            images.forEach((figure) => {
+                const source = figure.querySelector("img");
+                const zoomFigure = document.createElement("figure");
+                const frame = document.createElement("div");
+                frame.className = "zoom-frame";
+                const zoomImage = source.cloneNode();
+                zoomImage.removeAttribute("loading");
+                zoomImage.alt = `${source.alt}, 3× center detail`;
+                frame.append(zoomImage);
+                const caption = document.createElement("figcaption");
+                caption.textContent = figure.querySelector("figcaption").textContent;
+                zoomFigure.append(frame, caption);
+                zoomPair.append(zoomFigure);
+            });
+            details.append(zoomPair);
+            item.append(details);
+        });
+    </script>
 </body>
 
 </html>

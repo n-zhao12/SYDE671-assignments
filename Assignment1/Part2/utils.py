@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 
-
 def load_channels(filename):
 
     img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
@@ -14,10 +13,8 @@ def load_channels(filename):
 
     return B, G, R
 
-
 def shift_image(img, dx, dy):
     return np.roll(img, shift=(dy, dx), axis=(0, 1))
-
 
 def create_color_image(B, G, R):
 
@@ -27,10 +24,8 @@ def create_color_image(B, G, R):
 
     return color.astype(np.uint8)
 
-
 def save_image(filename, image):
     cv2.imwrite(filename, image)
-
 
 def auto_contrast(img):
 

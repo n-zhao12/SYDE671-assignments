@@ -1,75 +1,72 @@
-# SYDE671-assignment 1 - Prokudin-Gorskii Photo Colorization
+# SYDE 671 Assignment 1, Part 2 — Prokudin-Gorskii Photo Colorization
 
-This project reconstructs color images from Prokudin-Gorskii glass plate scans. Each input is a grayscale image containing three vertically stacked exposures, ordered blue, green, and red from top to bottom. The program separates the exposures, aligns green and red to blue using translations, and combines them into a color image.
+This project reconstructs color images from Prokudin-Gorskii glass-plate scans. Each input is a grayscale image with three vertically stacked exposures, ordered blue, green, and red from top to bottom. The program separates the exposures, aligns green and red to blue, and combines them into a color image.
 
-## Current pipeline
+## Selected method: normalized cross-correlation
 
-The current `main.py` configuration processes the JPG files in `self_picked_images/` using **texture-weighted NCC** with a 5% edge exclusion. Results are written to `texture_weighted_ncc_results/`.
+The selected alignment metric is raw normalized cross-correlation (NCC). Each channel is mean-centered and normalized before comparing a candidate shift. The separate color-filter exposures can have different brightness levels, so NCC is a reasonable choice: mean-centering and normalization make the score less dependent on absolute intensity and more dependent on the shared scene structure. The best-scoring shift is selected.
 
-For each input image, the program:
+## Pipeline
 
-1. Reads the grayscale plate and divides it into three equal-height blue, green, and red channels.
-2. Aligns green and red independently to blue with a coarse-to-fine image pyramid.
-3. Scores each translation using texture-weighted normalized cross-correlation (NCC), comparing only valid overlapping pixels and ignoring 5% around the overlap edges.
-4. Shifts the channels, crops to the area shared by all three, combines them in OpenCV's BGR order, and applies global automatic contrast.
-5. Prints the `(dx, dy)` displacement applied to green and red and saves a JPG result.
+The current `main.py` workflow processes JPG images from `images/` using pyramid alignment, raw NCC, and a 5% edge exclusion. Results are saved in `raw_ncc_5pct_results/`.
 
-The pyramid downsamples by a factor of two with area interpolation. It searches a range of ±15 pixels at its coarsest level, then refines the estimate within ±5 pixels at each finer level.
+For each plate, the program:
 
-### Texture-weighted NCC
+1. Splits the grayscale image into equal-height blue, green, and red sections.
+2. Aligns green and red independently to blue using a coarse-to-fine image pyramid.
+3. Scores candidate shifts using NCC over valid overlapping regions, excluding a 5% margin at the overlap edges.
+4. Applies the translations, crops to the region shared by all three channels, combines the channels, and rescales contrast.
+5. Prints the `(dx, dy)` displacement vectors applied to green and red, then saves a JPG result.
 
-The weight map is computed from the blue reference channel's Sobel gradient magnitude. Gradient values are normalized using their 95th percentile and clipped to `[0, 1]`. The pixel weight is `1 + 4t²`, where `t` is the normalized gradient magnitude. This gives detailed regions more influence in the NCC score while still including smoother regions.
+The pyramid downsamples by two using area interpolation. It searches ±15 pixels at the coarsest level, then refines the estimate within ±5 pixels at each finer level. The edge exclusion affects alignment scoring; it is not automatic detection/removal of the plate frame.
 
-## Methods implemented
+## Single-scale alignment
 
-- **Raw NCC**: mean-centered normalized cross-correlation of pixel intensities.
-- **Texture-weighted NCC**: raw-intensity NCC with greater weight on detailed regions; this is the current default.
-- **Gradient NCC**: NCC applied to Sobel gradient magnitudes.
-- **L2 distance**: Euclidean pixel difference, minimized during alignment.
-- **Single-scale alignment**: `align_channel()` in `alignment.py` exhaustively searches a user-specified translation window. It is implemented, but the current `main.py` workflow uses the pyramid and a standalone single-scale results run has not yet been done.
+`align_channel()` in `alignment.py` exhaustively searches a user-specified translation window. Run the single-scale NCC examples with:
 
-The metric can be changed in the `alignment_metric` setting near the bottom of `main.py`. The input folder and output folder are set there as well.
+```bash
+python main.py --single-scale
+```
 
-## Running the program
+This processes `00056v.jpg` and `00125v.jpg` from `images/` with a ±15-pixel search and writes results to `single_scale_ncc_results/`.
 
-Install the Python dependencies if needed:
+## Additional experiments
+
+The code also includes two optional NCC variants:
+
+- **Gradient NCC** compares Sobel gradient magnitudes. It was tested, but it was not selected because results were less reliable on the reviewed images.
+- **Texture-weighted NCC** uses Sobel magnitude from the blue reference to give detailed regions more influence. Results were visually similar to raw NCC in the examples reviewed, so raw NCC with edge exclusion remains the selected method.
+
+The 5% edge exclusion was compared with raw NCC without the exclusion and gave better alignments on the reviewed results. A wider final-resolution refinement trial for `01007a` selected the same shifts as the standard raw-NCC run.
+
+## Run the full provided image set
+
+Install dependencies if needed:
 
 ```bash
 python -m pip install numpy opencv-python
 ```
 
-Place stacked JPG images in `self_picked_images/`, then run from the project directory:
+From this project directory, run:
 
 ```bash
 python main.py
 ```
 
-To process the provided collection images instead, change `input_dir` in `main.py` to `Path("images")`. The output folder is selected from the metric-to-folder mapping in that file.
+The default configuration processes JPGs in `images/` and saves results in `raw_ncc_5pct_results/`.
 
-## Current self-picked image offsets
+## Result folders
 
-These are the offsets printed by the current texture-weighted NCC pipeline. They are the translations applied to green and red to align each channel to blue.
-
-| Image | Green `(dx, dy)` | Red `(dx, dy)` |
-|---|---:|---:|
-| `00279v.jpg` | `(1, 3)` | `(2, 12)` |
-| `00470v.jpg` | `(-2, 6)` | `(-5, 12)` |
-| `02180v.jpg` | `(-2, 1)` | `(-3, 1)` |
-
-## Experiment outputs
-
-Separate folders contain results from the methods compared during development:
-
-- `raw_ncc_5pct_results/` — raw NCC with overlap-aware scoring and 5% edge exclusion.
-- `gradient_ncc_results/` — gradient-magnitude NCC.
-- `texture_weighted_ncc_results/` — texture-weighted NCC.
-- `raw_ncc_5pct_wide_refine_results/` — a wider final-resolution search comparison for `01007a`; it selected the same shifts as the standard raw-NCC run.
-
-Texture-weighted NCC has looked best so far on the images reviewed, but it does not improve every image. Some color fringing remains, especially around high-contrast details and plate borders. The current model estimates translation only; it does not correct scale, rotation, local distortion, or automatically remove the original plate frame.
+- `NCC_results/` — raw NCC without edge exclusion.
+- `raw_ncc_5pct_results/` — selected raw NCC method with 5% edge exclusion.
+- `single_scale_ncc_results/` — exhaustive single-scale NCC examples.
+- `gradient_ncc_results/` — gradient-magnitude NCC experiment.
+- `texture_weighted_ncc_results/` — texture-weighted NCC experiment.
+- `raw_ncc_5pct_wide_refine_results/` — wider refinement comparison for `01007a`.
 
 ## Project files
 
-- `main.py` — input selection, channel alignment, output cropping, and batch processing.
-- `utils.py` — channel loading, translation, color image assembly, saving, and contrast adjustment.
-- `alignment.py` — NCC, weighted NCC, gradient NCC, L2 distance, overlap handling, and single-scale search.
+- `main.py` — pipeline, image selection, batch processing, and single-scale examples.
+- `utils.py` — channel loading, shifting, image assembly, saving, and contrast adjustment.
+- `alignment.py` — NCC variants, overlap handling, and exhaustive single-scale search.
 - `pyramid.py` — downsampling and coarse-to-fine alignment.

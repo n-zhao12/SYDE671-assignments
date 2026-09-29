@@ -4,7 +4,6 @@ import numpy as np
 from alignment import (
     aligned_overlap,
     gradient_image,
-    l2_distance,
     ncc,
     texture_weights,
     weighted_ncc,
@@ -28,6 +27,9 @@ def pyramid_align(
     metric="ncc",
     edge_fraction=0.05
 ):
+
+    if metric not in ("ncc", "gradient_ncc", "weighted_ncc"):
+        raise ValueError(f"Unsupported alignment metric: {metric}")
 
     if (
         level == 0 or
@@ -71,7 +73,7 @@ def pyramid_align(
         target_features = target
     weights = texture_weights(reference) if metric == "weighted_ncc" else None
 
-    best_score = np.inf if metric == "l2" else -np.inf
+    best_score = -np.inf
     best_shift = (dx, dy)
 
     for x in range(dx - 5, dx + 6):
@@ -90,15 +92,12 @@ def pyramid_align(
             else:
                 ref_crop, shifted_crop = overlap
 
-            if metric == "l2":
-                score = l2_distance(ref_crop, shifted_crop)
-            elif metric == "weighted_ncc":
+            if metric == "weighted_ncc":
                 score = weighted_ncc(ref_crop, shifted_crop, weight_crop)
             else:
                 score = ncc(ref_crop, shifted_crop)
 
-            is_better = score < best_score if metric == "l2" else score > best_score
-            if is_better:
+            if score > best_score:
 
                 best_score = score
                 best_shift = (x, y)

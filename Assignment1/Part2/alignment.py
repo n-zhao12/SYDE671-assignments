@@ -64,13 +64,6 @@ def weighted_ncc(img1, img2, weights):
     return np.sum(weights * centered1 * centered2) / denom
 
 
-def l2_distance(img1, img2):
-
-    return np.sqrt(
-        np.sum((img1 - img2) ** 2)
-    )
-
-
 def aligned_overlap(
     reference,
     target,
@@ -108,6 +101,9 @@ def aligned_overlap(
 
 def align_channel(reference, target, search_range=15, metric="ncc", edge_fraction=0.05):
 
+    if metric not in ("ncc", "gradient_ncc", "weighted_ncc"):
+        raise ValueError(f"Unsupported alignment metric: {metric}")
+
     if metric == "gradient_ncc":
         reference_features = gradient_image(reference)
         target_features = gradient_image(target)
@@ -118,10 +114,7 @@ def align_channel(reference, target, search_range=15, metric="ncc", edge_fractio
 
     best_shift = (0, 0)
 
-    if metric in ("ncc", "gradient_ncc", "weighted_ncc"):
-        best_score = -np.inf
-    else:
-        best_score = np.inf
+    best_score = -np.inf
 
     for dx in range(
         -search_range,
@@ -148,29 +141,14 @@ def align_channel(reference, target, search_range=15, metric="ncc", edge_fractio
 
             if metric == "weighted_ncc":
                 score = weighted_ncc(ref_crop, shifted_crop, weight_crop)
-                if score > best_score:
-                    best_score = score
-                    best_shift = (dx, dy)
-            elif metric in ("ncc", "gradient_ncc"):
-
+            else:
                 score = ncc(
                     ref_crop,
                     shifted_crop
                 )
 
-                if score > best_score:
-                    best_score = score
-                    best_shift = (dx, dy)
-
-            else:
-
-                score = l2_distance(
-                    ref_crop,
-                    shifted_crop
-                )
-
-                if score < best_score:
-                    best_score = score
-                    best_shift = (dx, dy)
+            if score > best_score:
+                best_score = score
+                best_shift = (dx, dy)
 
     return best_shift
