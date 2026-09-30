@@ -267,10 +267,12 @@
                 <h2>Bells &amp; whistles</h2>
                 <p>Starting with raw NCC, we explored ways to make channel alignment less sensitive to distracting
                     borders and to emphasize useful image structure. The selected improvement was a 5% edge exclusion;
-                    we then tested two alternative NCC feature strategies. All final images are also cropped to their
-                    shared valid area and automatically contrast-stretched to the 0–255 range. Each comparison uses
-                    the same two images—00458u and 01657u. Click a preview to open its full-resolution
-                    version, then zoom in with your browser to inspect alignment details.</p>
+                    we then tested two alternative NCC feature strategies.</p>
+                <p>Automatic contrast: All final images are also cropped to their shared valid area and
+                    automatically contrast-stretched to
+                    the 0–255 range.</p>
+                <p>Each comparison uses the same two images: 00458u and 01657u. Click a preview to
+                    open its full-resolution version, then zoom in with your browser to inspect alignment details.</p>
             </div>
             <article class="card section">
                 <h3><strong>1. Add 5% edge exclusion — final selected method</strong></h3>
@@ -444,8 +446,7 @@
                 <article class="card">
                     <h3>Other experiments</h3>
                     <p>Gradient-magnitude NCC was less reliable than the selected method in the examples reviewed.
-                        Texture-weighted NCC produced very similar results without a consistent improvement. A wider
-                        final-resolution search on 01007a also selected the same shifts as the standard refinement.
+                        Texture-weighted NCC produced very similar results without a consistent improvement.
                         These tests supported keeping raw NCC with 5% edge exclusion as our final method. Automatic
                         contrast stretching is applied to each reconstructed image for display.</p>
                 </article>
