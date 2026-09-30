@@ -1,66 +1,28 @@
 import cv2
 import numpy as np
 
-from alignment import (
-    aligned_overlap,
-    gradient_image,
-    ncc,
-    texture_weights,
-    weighted_ncc,
-)
+from alignment import (aligned_overlap, gradient_image, ncc, texture_weights, weighted_ncc,)
 
 
 def downsample(img):
-
-    return cv2.resize(
-        img,
-        (img.shape[1] // 2,
-         img.shape[0] // 2),
-        interpolation=cv2.INTER_AREA
-    )
+    return cv2.resize(img, (img.shape[1] // 2, img.shape[0] // 2), interpolation=cv2.INTER_AREA)
 
 
-def pyramid_align(
-    reference,
-    target,
-    level=4,
-    metric="ncc",
-    edge_fraction=0.05
-):
+def pyramid_align(reference, target, level=4, metric="ncc", edge_fraction=0.05):
 
     if metric not in ("ncc", "gradient_ncc", "weighted_ncc"):
         raise ValueError(f"Unsupported alignment metric: {metric}")
 
-    if (
-        level == 0 or
-        min(reference.shape) < 400
-    ):
+    if (level == 0 or min(reference.shape) < 400):
 
         from alignment import align_channel
+        return align_channel(reference, target, search_range=15, metric=metric, edge_fraction=edge_fraction)
 
-        return align_channel(
-            reference,
-            target,
-            search_range=15,
-            metric=metric,
-            edge_fraction=edge_fraction
-        )
+    small_ref = downsample(reference)
 
-    small_ref = downsample(
-        reference
-    )
+    small_target = downsample(target)
 
-    small_target = downsample(
-        target
-    )
-
-    dx, dy = pyramid_align(
-        small_ref,
-        small_target,
-        level - 1,
-        metric=metric,
-        edge_fraction=edge_fraction
-    )
+    dx, dy = pyramid_align(small_ref, small_target, level - 1, metric=metric, edge_fraction=edge_fraction)
 
     dx *= 2
     dy *= 2
@@ -79,14 +41,7 @@ def pyramid_align(
     for x in range(dx - 5, dx + 6):
         for y in range(dy - 5, dy + 6):
 
-            overlap = aligned_overlap(
-                reference_features,
-                target_features,
-                x,
-                y,
-                edge_fraction=edge_fraction,
-                weights=weights
-            )
+            overlap = aligned_overlap(reference_features, target_features, x, y, edge_fraction=edge_fraction, weights=weights)
             if weights is not None:
                 ref_crop, shifted_crop, weight_crop = overlap
             else:

@@ -1,10 +1,9 @@
 import cv2
 import numpy as np
 
-def load_channels(filename):
 
-    img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-    img = img.astype(np.float32)
+def load_channels(filename):
+    img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE).astype(np.float32)
     h = img.shape[0] // 3
 
     B = img[:h]
@@ -13,22 +12,24 @@ def load_channels(filename):
 
     return B, G, R
 
+
 def shift_image(img, dx, dy):
     return np.roll(img, shift=(dy, dx), axis=(0, 1))
 
-def create_color_image(B, G, R):
 
+def create_color_image(B, G, R):
     # OpenCV uses BGR channel order for images written with cv2.imwrite.
     color = np.dstack([B, G, R])
     color = np.clip(color, 0, 255)
 
     return color.astype(np.uint8)
 
+
 def save_image(filename, image):
     cv2.imwrite(filename, image)
 
-def auto_contrast(img):
 
+def auto_contrast(img):
     img = img.astype(np.float32)
     img -= img.min()
     if img.max() > 0:

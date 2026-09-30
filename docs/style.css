@@ -258,6 +258,7 @@ tr:last-child td {
     padding: 8px 10px;
     color: var(--muted);
     font-size: .88rem;
+    text-align: center;
 }
 
 .comparison-grid {
@@ -304,6 +305,7 @@ tr:last-child td {
     color: var(--muted);
     font-size: .78rem;
     line-height: 1.35;
+    text-align: center;
 }
 
 .comparison-pair a:focus-visible {
@@ -357,6 +359,7 @@ tr:last-child td {
     color: var(--muted);
     font-size: .78rem;
     line-height: 1.35;
+    text-align: center;
 }
 
 .placeholder {

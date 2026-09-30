@@ -32,7 +32,7 @@ This processes `00056v.jpg` and `00125v.jpg` from `images/` with a ±15-pixel se
 
 ## Additional experiments
 
-The code also includes two optional NCC variants:
+The code also includes two optional NCC variants. Both use Sobel filters, which estimate local image-intensity changes in the horizontal and vertical directions; their combined magnitude is larger around strong edges and texture:
 
 - **Gradient NCC** compares Sobel gradient magnitudes. It was tested, but it was not selected because results were less reliable on the reviewed images.
 - **Texture-weighted NCC** uses Sobel magnitude from the blue reference to give detailed regions more influence. Results were visually similar to raw NCC in the examples reviewed, so raw NCC with edge exclusion remains the selected method.
@@ -40,12 +40,6 @@ The code also includes two optional NCC variants:
 The 5% edge exclusion was compared with raw NCC without the exclusion and gave better alignments on the reviewed results. A wider final-resolution refinement trial for `01007a` selected the same shifts as the standard raw-NCC run.
 
 ## Run the full provided image set
-
-Install dependencies if needed:
-
-```bash
-python -m pip install numpy opencv-python
-```
 
 From this project directory, run:
 

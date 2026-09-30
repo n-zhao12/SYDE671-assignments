@@ -3,23 +3,16 @@ import numpy as np
 
 
 def ncc(img1, img2):
-
     img1 = img1 - np.mean(img1)
     img2 = img2 - np.mean(img2)
-
-    denom = (
-        np.linalg.norm(img1) *
-        np.linalg.norm(img2)
-    )
-
+    denom = np.linalg.norm(img1) * np.linalg.norm(img2)
     if denom == 0:
         return -1
-
     return np.sum(img1 * img2) / denom
 
 
 def gradient_image(img):
-    """Return Sobel gradient magnitude for an image."""
+    # Return Sobel gradient magnitude for an image.
     img = img.astype(np.float32, copy=False)
     gx = cv2.Sobel(img, cv2.CV_32F, 1, 0, ksize=3)
     gy = cv2.Sobel(img, cv2.CV_32F, 0, 1, ksize=3)
@@ -27,12 +20,12 @@ def gradient_image(img):
 
 
 def gradient_ncc(img1, img2):
-    """Compute NCC between Sobel gradient magnitudes."""
+    # Compute NCC between Sobel gradient magnitudes.
     return ncc(gradient_image(img1), gradient_image(img2))
 
 
 def texture_weights(img, strength=4.0):
-    """Give textured reference pixels more influence during NCC scoring."""
+    # Give textured reference pixels more influence during NCC scoring.
     magnitude = gradient_image(img)
     scale = np.percentile(magnitude, 95)
     if scale <= 0:
@@ -43,7 +36,7 @@ def texture_weights(img, strength=4.0):
 
 
 def weighted_ncc(img1, img2, weights):
-    """NCC with a fixed spatial weight map, centered by weighted means."""
+    # NCC with a fixed spatial weight map, centered by weighted means.
     weights = weights.astype(np.float32, copy=False)
     weight_sum = np.sum(weights)
     if weight_sum <= 0:
@@ -55,24 +48,14 @@ def weighted_ncc(img1, img2, weights):
     mean2 = np.sum(weights * img2) / weight_sum
     centered1 = img1 - mean1
     centered2 = img2 - mean2
-    denom = np.sqrt(
-        np.sum(weights * centered1**2) *
-        np.sum(weights * centered2**2)
-    )
+    denom = np.sqrt(np.sum(weights * centered1**2) * np.sum(weights * centered2**2))
     if denom == 0:
         return -1
     return np.sum(weights * centered1 * centered2) / denom
 
 
-def aligned_overlap(
-    reference,
-    target,
-    dx,
-    dy,
-    edge_fraction=0.05,
-    weights=None
-):
-    """Return matching regions without the wrapped pixels from np.roll."""
+def aligned_overlap(reference, target, dx, dy, edge_fraction=0.05, weights=None):
+    # Return matching regions without the wrapped pixels from np.roll.
     height, width = reference.shape
 
     y_start = max(0, dy)
@@ -100,7 +83,6 @@ def aligned_overlap(
 
 
 def align_channel(reference, target, search_range=15, metric="ncc", edge_fraction=0.05):
-
     if metric not in ("ncc", "gradient_ncc", "weighted_ncc"):
         raise ValueError(f"Unsupported alignment metric: {metric}")
 
@@ -116,24 +98,9 @@ def align_channel(reference, target, search_range=15, metric="ncc", edge_fractio
 
     best_score = -np.inf
 
-    for dx in range(
-        -search_range,
-        search_range + 1
-    ):
-
-        for dy in range(
-            -search_range,
-            search_range + 1
-        ):
-
-            overlap = aligned_overlap(
-                reference_features,
-                target_features,
-                dx,
-                dy,
-                edge_fraction=edge_fraction,
-                weights=weights
-            )
+    for dx in range(-search_range, search_range + 1):
+        for dy in range(-search_range, search_range + 1):
+            overlap = aligned_overlap(reference_features, target_features, dx, dy, edge_fraction=edge_fraction, weights=weights)
             if weights is not None:
                 ref_crop, shifted_crop, weight_crop = overlap
             else:
@@ -142,10 +109,7 @@ def align_channel(reference, target, search_range=15, metric="ncc", edge_fractio
             if metric == "weighted_ncc":
                 score = weighted_ncc(ref_crop, shifted_crop, weight_crop)
             else:
-                score = ncc(
-                    ref_crop,
-                    shifted_crop
-                )
+                score = ncc(ref_crop, shifted_crop)
 
             if score > best_score:
                 best_score = score

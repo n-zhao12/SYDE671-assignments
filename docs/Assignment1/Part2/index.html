@@ -23,7 +23,8 @@
             <h1>Colorizing the Prokudin-Gorskii photo collection</h1>
             <p>Sergei Prokudin-Gorskii recorded scenes on glass plates through red, green, and blue filters. This
                 project separates the stacked exposures, aligns them, and combines them into color images.</p>
-            <div class="hero-actions"><a class="button" href="#results">See the results</a><a class="button secondary"
+            <div class="hero-actions"><a class="button" href="#results">Go to best metrics</a><a
+                    class="button secondary"
                     href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment1/Part2">View source
                     code</a></div>
         </section>
@@ -55,29 +56,37 @@
         <section class="section">
             <div class="section-heading">
                 <h2>Alignment methods</h2>
-                <p>The implementation includes exhaustive single-scale search and a coarse-to-fine image pyramid.</p>
+                <p>We first implemented a direct translation search, then used a coarse-to-fine pyramid to handle
+                    larger shifts efficiently. Our selected metric is raw normalized cross-correlation (NCC), with a
+                    5% edge exclusion during scoring.</p>
             </div>
             <div class="grid">
                 <article class="card">
-                    <h3>Single-scale baseline</h3>
-                    <p>For each candidate translation, compare the reference and shifted channel. Raw NCC mean-centers
-                        the image regions and scores their normalized dot product; the best-scoring translation is
-                        selected.</p>
-                    <p>We chose NCC because the separate filtered exposures can have different brightness levels.
-                        Mean-centering and normalization make the score focus more on shared image structure than on
-                        absolute intensity.</p>
-                    <p><span class="tag">Single-scale NCC outputs available for two low-resolution images</span></p>
+                    <h3>1 · Single-scale search</h3>
+                    <p>At the original image resolution, the algorithm exhaustively tests every integer translation
+                        in a ±15-pixel window. For each candidate, it scores the valid overlap and keeps the shift with
+                        the highest NCC. We ran this baseline on two low-resolution JPEGs.</p>
+                    <p>NCC mean-centers both regions and divides their dot product by their norms. This makes it less
+                        sensitive to brightness and contrast differences between the differently filtered exposures
+                        than a direct pixel-difference score.</p>
                 </article>
                 <article class="card">
-                    <h3>Coarse-to-fine pyramid</h3>
-                    <p>Repeatedly downsample by two, find a coarse translation, scale it back up, and refine locally at
-                        each finer resolution. This makes a wider effective search practical for large scans.</p>
-                    <p>The reported vector is the shift applied to the moving channel.</p>
+                    <h3>2 · Coarse-to-fine image pyramid</h3>
+                    <p>To avoid an expensive large full-resolution search, each image is repeatedly downsampled by
+                        two. The algorithm searches ±15 pixels at the coarsest level, doubles the estimated shift when
+                        moving to the next resolution, then refines it within ±5 pixels at each finer level.</p>
+                    <p>At every scale, scoring uses only the valid overlap and the same 5% margin around its edges.
+                        The final <code>(dx, dy)</code> values are the translations applied to green and red to align
+                        them with blue.</p>
                 </article>
                 <article class="card">
-                    <h3>Texture-weighted NCC</h3>
-                    <p>An extension weights pixels by Sobel gradient magnitude in the blue reference, giving detailed
-                        regions more influence than smooth areas. Basic NCC results are included separately.</p>
+                    <h3>3 · NCC feature experiments</h3>
+                    <p>For these experiments, we use the <strong>Sobel operator</strong>, a small image filter that
+                        estimates intensity changes horizontally and vertically. Combining those changes gives a
+                        gradient-magnitude image: strong edges and texture have larger values. Gradient-magnitude NCC
+                        compares these feature images, while texture-weighted NCC gives textured regions in the blue
+                        reference more influence. Both use the same 5% edge exclusion. Their motivations and
+                        comparisons with raw NCC appear in the Bells &amp; Whistles section.</p>
                 </article>
             </div>
         </section>
@@ -92,19 +101,19 @@
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/single_scale_ncc_results/00056v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/single_scale_ncc_results/00056v_result.jpg"
                             alt="Single-scale raw-NCC colorization result for 00056v" loading="lazy"></a>
-                    <figcaption>00056v · single-scale raw NCC</figcaption>
+                    <figcaption>00056v</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/single_scale_ncc_results/00125v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/single_scale_ncc_results/00125v_result.jpg"
                             alt="Single-scale raw-NCC colorization result for 00125v" loading="lazy"></a>
-                    <figcaption>00125v · single-scale raw NCC</figcaption>
+                    <figcaption>00125v</figcaption>
                 </figure>
             </div>
         </section>
         <section class="section" id="results">
             <div class="section-heading">
-                <h2>Multi-scale pyramid results · raw NCC</h2>
+                <h2>Multi-scale pyramid · raw NCC with 5% edge exclusion</h2>
                 <p>These are the 18 provided images processed using pyramid alignment with raw NCC and a 5% edge
                     exclusion. Each caption lists the translation applied to the green and red channels. Click an
                     image to open the full-size result.</p>
@@ -114,109 +123,109 @@
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00056v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00056v_result.jpg"
                             alt="Raw-NCC result for 00056v" loading="lazy"></a>
-                    <figcaption>00056v · G shift (NCC): (1, 6)<br>R shift (NCC): (0, 13)</figcaption>
+                    <figcaption>00056v<br>G shift (NCC): (1, 6)<br>R shift (NCC): (0, 13)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00125v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00125v_result.jpg"
                             alt="Raw-NCC result for 00125v" loading="lazy"></a>
-                    <figcaption>00125v · G shift (NCC): (1, 6)<br>R shift (NCC): (1, 10)</figcaption>
+                    <figcaption>00125v<br>G shift (NCC): (1, 6)<br>R shift (NCC): (1, 10)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00163v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00163v_result.jpg"
                             alt="Raw-NCC result for 00163v" loading="lazy"></a>
-                    <figcaption>00163v · G shift (NCC): (1, −3)<br>R shift (NCC): (1, −4)</figcaption>
+                    <figcaption>00163v<br>G shift (NCC): (1, −3)<br>R shift (NCC): (1, −4)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"
                             alt="Raw-NCC result for 00458u" loading="lazy"></a>
-                    <figcaption>00458u · G shift (NCC): (6, 43)<br>R shift (NCC): (32, 87)</figcaption>
+                    <figcaption>00458u<br>G shift (NCC): (6, 43)<br>R shift (NCC): (32, 87)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00804v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00804v_result.jpg"
                             alt="Raw-NCC result for 00804v" loading="lazy"></a>
-                    <figcaption>00804v · G shift (NCC): (−2, 6)<br>R shift (NCC): (−4, 13)</figcaption>
+                    <figcaption>00804v<br>G shift (NCC): (−2, 6)<br>R shift (NCC): (−4, 13)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"
                             alt="Raw-NCC result for 01007a" loading="lazy"></a>
-                    <figcaption>01007a · G shift (NCC): (13, 61)<br>R shift (NCC): (12, 129)</figcaption>
+                    <figcaption>01007a<br>G shift (NCC): (13, 61)<br>R shift (NCC): (12, 129)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01047u_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01047u_result.jpg"
                             alt="Raw-NCC result for 01047u" loading="lazy"></a>
-                    <figcaption>01047u · G shift (NCC): (20, 24)<br>R shift (NCC): (33, 72)</figcaption>
+                    <figcaption>01047u<br>G shift (NCC): (20, 24)<br>R shift (NCC): (33, 72)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01164v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01164v_result.jpg"
                             alt="Raw-NCC result for 01164v" loading="lazy"></a>
-                    <figcaption>01164v · G shift (NCC): (2, 6)<br>R shift (NCC): (3, 11)</figcaption>
+                    <figcaption>01164v<br>G shift (NCC): (2, 6)<br>R shift (NCC): (3, 11)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01269v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01269v_result.jpg"
                             alt="Raw-NCC result for 01269v" loading="lazy"></a>
-                    <figcaption>01269v · G shift (NCC): (2, 6)<br>R shift (NCC): (2, 14)</figcaption>
+                    <figcaption>01269v<br>G shift (NCC): (2, 6)<br>R shift (NCC): (2, 14)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01522v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01522v_result.jpg"
                             alt="Raw-NCC result for 01522v" loading="lazy"></a>
-                    <figcaption>01522v · G shift (NCC): (2, 6)<br>R shift (NCC): (2, 13)</figcaption>
+                    <figcaption>01522v<br>G shift (NCC): (2, 6)<br>R shift (NCC): (2, 13)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01597v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01597v_result.jpg"
                             alt="Raw-NCC result for 01597v" loading="lazy"></a>
-                    <figcaption>01597v · G shift (NCC): (1, 7)<br>R shift (NCC): (0, 15)</figcaption>
+                    <figcaption>01597v<br>G shift (NCC): (1, 7)<br>R shift (NCC): (0, 15)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01598v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01598v_result.jpg"
                             alt="Raw-NCC result for 01598v" loading="lazy"></a>
-                    <figcaption>01598v · G shift (NCC): (0, 8)<br>R shift (NCC): (−1, 15)</figcaption>
+                    <figcaption>01598v<br>G shift (NCC): (0, 8)<br>R shift (NCC): (−1, 15)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"
                             alt="Raw-NCC result for 01657u" loading="lazy"></a>
-                    <figcaption>01657u · G shift (NCC): (8, 56)<br>R shift (NCC): (12, 118)</figcaption>
+                    <figcaption>01657u<br>G shift (NCC): (8, 56)<br>R shift (NCC): (12, 118)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01725u_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01725u_result.jpg"
                             alt="Raw-NCC result for 01725u" loading="lazy"></a>
-                    <figcaption>01725u · G shift (NCC): (44, 77)<br>R shift (NCC): (77, 162)</figcaption>
+                    <figcaption>01725u<br>G shift (NCC): (44, 77)<br>R shift (NCC): (77, 162)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01728v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01728v_result.jpg"
                             alt="Raw-NCC result for 01728v" loading="lazy"></a>
-                    <figcaption>01728v · G shift (NCC): (1, 9)<br>R shift (NCC): (1, 15)</figcaption>
+                    <figcaption>01728v<br>G shift (NCC): (1, 9)<br>R shift (NCC): (1, 15)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01861a_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01861a_result.jpg"
                             alt="Raw-NCC result for 01861a" loading="lazy"></a>
-                    <figcaption>01861a · G shift (NCC): (39, 72)<br>R shift (NCC): (63, 148)</figcaption>
+                    <figcaption>01861a<br>G shift (NCC): (39, 72)<br>R shift (NCC): (63, 148)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/10131v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/10131v_result.jpg"
                             alt="Raw-NCC result for 10131v" loading="lazy"></a>
-                    <figcaption>10131v · G shift (NCC): (2, 6)<br>R shift (NCC): (3, 12)</figcaption>
+                    <figcaption>10131v<br>G shift (NCC): (2, 6)<br>R shift (NCC): (3, 12)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/31421v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/31421v_result.jpg"
                             alt="Raw-NCC result for 31421v" loading="lazy"></a>
-                    <figcaption>31421v · G shift (NCC): (0, 8)<br>R shift (NCC): (0, 13)</figcaption>
+                    <figcaption>31421v<br>G shift (NCC): (0, 8)<br>R shift (NCC): (0, 13)</figcaption>
                 </figure>
             </div>
             <p class="muted">Texture-weighted NCC was also tested, but its visual difference from raw NCC was small on
@@ -236,20 +245,20 @@
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00279v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00279v_result.jpg"
                             alt="Raw NCC with 5 percent edge exclusion result for 00279v" loading="lazy"></a>
-                    <figcaption>00279v · G shift (NCC): (1, 3)<br>R shift (NCC): (2, 12)</figcaption>
+                    <figcaption>00279v<br>G shift (NCC): (1, 3)<br>R shift (NCC): (2, 12)</figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00470v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00470v_result.jpg"
                             alt="Raw NCC with 5 percent edge exclusion result for 00470v" loading="lazy"></a>
-                    <figcaption>00470v · G shift (NCC): (−2, 6)<br>R shift (NCC): (−5, 12)
+                    <figcaption>00470v<br>G shift (NCC): (−2, 6)<br>R shift (NCC): (−5, 12)
                     </figcaption>
                 </figure>
                 <figure><a
                         href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/02180v_result.jpg"><img
                             src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/02180v_result.jpg"
                             alt="Raw NCC with 5 percent edge exclusion result for 02180v" loading="lazy"></a>
-                    <figcaption>02180v · G shift (NCC): (−2, 1)<br>R shift (NCC): (−3, 1)</figcaption>
+                    <figcaption>02180v<br>G shift (NCC): (−2, 1)<br>R shift (NCC): (−3, 1)</figcaption>
                 </figure>
             </div>
         </section>
@@ -260,7 +269,7 @@
                     borders and to emphasize useful image structure. The selected improvement was a 5% edge exclusion;
                     we then tested two alternative NCC feature strategies. All final images are also cropped to their
                     shared valid area and automatically contrast-stretched to the 0–255 range. Each comparison uses
-                    the same three images—00458u, 01007a, and 01657u. Click a preview to open its full-resolution
+                    the same two images—00458u and 01657u. Click a preview to open its full-resolution
                     version, then zoom in with your browser to inspect alignment details.</p>
             </div>
             <article class="card section">
@@ -274,75 +283,148 @@
                 <p><strong>Observed result:</strong> The 5% setting produced better alignments than scoring all the
                     way to the overlap edges in our comparisons, so we selected raw NCC with 5% edge exclusion for the
                     main results.</p>
-                    <h4>No exclusion vs. 5% exclusion · two-image comparison</h4>
+                <h4>Raw NCC baseline vs. No edge exclusion</h4>
                 <div class="comparison-grid">
-                    <div class="comparison-item"><h5>00458u</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/00458u_result.jpg" alt="00458u raw NCC without edge exclusion" loading="lazy"></a><figcaption>Raw NCC · no exclusion</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg" alt="00458u raw NCC with 5 percent edge exclusion" loading="lazy"></a><figcaption>Raw NCC · 5% exclusion</figcaption></figure>
-                    </div></div>
-                    <div class="comparison-item"><h5>01007a</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01007a_result.jpg" alt="01007a raw NCC without edge exclusion" loading="lazy"></a><figcaption>Raw NCC · no exclusion</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg" alt="01007a raw NCC with 5 percent edge exclusion" loading="lazy"></a><figcaption>Raw NCC · 5% exclusion</figcaption></figure>
-                    </div></div>
-                    <div class="comparison-item"><h5>01657u</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01657u_result.jpg" alt="01657u raw NCC without edge exclusion" loading="lazy"></a><figcaption>Raw NCC · no exclusion</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg" alt="01657u raw NCC with 5 percent edge exclusion" loading="lazy"></a><figcaption>Raw NCC · 5% exclusion</figcaption></figure>
-                    </div></div>
+                    <div class="comparison-item">
+                        <h5>00458u</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/00458u_result.jpg"
+                                data-zoom-caption="5% exclusion"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/00458u_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/00458u_result.jpg"
+                                        alt="00458u raw NCC baseline without edge exclusion" loading="lazy"></a>
+                                <figcaption>No exclusion</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h5>01007a</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/01007a_result.jpg"
+                                data-zoom-caption="5% exclusion"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01007a_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01007a_result.jpg"
+                                        alt="01007a raw NCC baseline without edge exclusion" loading="lazy"></a>
+                                <figcaption>No exclusion</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h5>01657u</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/01657u_result.jpg"
+                                data-zoom-caption="5% exclusion"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01657u_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/NCC_results/01657u_result.jpg"
+                                        alt="01657u raw NCC baseline without edge exclusion" loading="lazy"></a>
+                                <figcaption>No exclusion</figcaption>
+                            </figure>
+                        </div>
+                    </div>
                 </div>
             </article>
             <article class="card section">
                 <p><strong>Building on that improvement, we next tested alternative NCC features:</strong> For these
                     experiments the edge exclusion remains at 5%, while the data representation used by NCC changes.</p>
                 <h3><strong>2. Gradient-magnitude NCC — negative impact in our tests</strong></h3>
-                <p><strong>What it does:</strong> Sobel filters produce a gradient magnitude image for each channel, and
-                    NCC compares those gradient images instead of the original pixel intensities.</p>
+                <p><strong>What it does:</strong> The Sobel operator estimates horizontal and vertical intensity
+                    changes; their combined magnitude forms a feature image for each channel. NCC then compares these
+                    gradient-magnitude images instead of the original pixel intensities.</p>
                 <p><strong>Why we tried it:</strong> Edges and gradients describe structural boundaries and may be less
                     sensitive to brightness differences between the color-filter exposures. We expected matching
                     structure to help where raw intensity patterns differ.</p>
                 <p><strong>Observed result:</strong> It aligned less reliably than our selected raw-NCC method in the
                     images reviewed. Gradient magnitude can amplify noise and discards some intensity information, so
                     the structural signal was not consistently more useful than raw intensities for these plates.</p>
-                    <h4>Selected method vs. gradient NCC · two-image comparison</h4>
+                <h4>Selected method vs. gradient NCC</h4>
                 <div class="comparison-grid">
-                    <div class="comparison-item"><h5>00458u</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg" alt="00458u selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/00458u_result.jpg" alt="00458u gradient NCC result" loading="lazy"></a><figcaption>Gradient NCC</figcaption></figure>
-                    </div></div>
-                    <div class="comparison-item"><h5>01007a</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg" alt="01007a selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01007a_result.jpg" alt="01007a gradient NCC result" loading="lazy"></a><figcaption>Gradient NCC</figcaption></figure>
-                    </div></div>
-                    <div class="comparison-item"><h5>01657u</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg" alt="01657u selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01657u_result.jpg" alt="01657u gradient NCC result" loading="lazy"></a><figcaption>Gradient NCC</figcaption></figure>
-                    </div></div>
+                    <div class="comparison-item">
+                        <h5>00458u</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/00458u_result.jpg"
+                                data-zoom-caption="raw NCC"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/00458u_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/00458u_result.jpg"
+                                        alt="00458u gradient NCC result" loading="lazy"></a>
+                                <figcaption>Gradient NCC</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h5>01007a</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/01007a_result.jpg"
+                                data-zoom-caption="raw NCC"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01007a_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01007a_result.jpg"
+                                        alt="01007a gradient NCC result" loading="lazy"></a>
+                                <figcaption>Gradient NCC</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h5>01657u</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/01657u_result.jpg"
+                                data-zoom-caption="raw NCC"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01657u_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/gradient_ncc_results/01657u_result.jpg"
+                                        alt="01657u gradient NCC result" loading="lazy"></a>
+                                <figcaption>Gradient NCC</figcaption>
+                            </figure>
+                        </div>
+                    </div>
                 </div>
             </article>
             <article class="card section">
                 <h3><strong>3. Texture-weighted NCC — little visible difference</strong></h3>
-                <p><strong>What it does:</strong> A weight map is computed from Sobel gradient magnitude in the blue
-                    reference. NCC still compares original intensities, but detailed pixels receive higher weights
-                    than smoother areas.</p>
+                <p><strong>What it does:</strong> A weight map is computed from the blue reference's Sobel
+                    gradient-magnitude image. NCC still compares original intensities, but pixels with stronger
+                    gradients—typically edges and texture—receive higher weights.</p>
                 <p><strong>Why we tried it:</strong> Distinctive textures and edges can provide strong alignment cues.
                     We expected emphasizing those regions to reduce the influence of broad, smooth areas and improve
                     the shift estimate.</p>
                 <p><strong>Observed result:</strong> The outputs looked very similar to selected raw NCC, with no
                     consistent visible improvement. The unweighted score already aligned the main structures in these
                     examples, so giving textured regions extra influence did not materially change the result.</p>
-                    <h4>Selected method vs. texture-weighted NCC · two-image comparison</h4>
+                <h4>Selected method vs. texture-weighted NCC</h4>
                 <div class="comparison-grid">
-                    <div class="comparison-item"><h5>00458u</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/00458u_result.jpg" alt="00458u selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00458u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00458u_result.jpg" alt="00458u texture-weighted NCC result" loading="lazy"></a><figcaption>Texture-weighted NCC</figcaption></figure>
-                    </div></div>
-                    <div class="comparison-item"><h5>01007a</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01007a_result.jpg" alt="01007a selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01007a_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01007a_result.jpg" alt="01007a texture-weighted NCC result" loading="lazy"></a><figcaption>Texture-weighted NCC</figcaption></figure>
-                    </div></div>
-                    <div class="comparison-item"><h5>01657u</h5><div class="comparison-pair">
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/raw_ncc_5pct_results/01657u_result.jpg" alt="01657u selected raw NCC result" loading="lazy"></a><figcaption>Selected · raw NCC, 5%</figcaption></figure>
-                        <figure><a target="_blank" rel="noopener" href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01657u_result.jpg"><img src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01657u_result.jpg" alt="01657u texture-weighted NCC result" loading="lazy"></a><figcaption>Texture-weighted NCC</figcaption></figure>
-                    </div></div>
+                    <div class="comparison-item">
+                        <h5>00458u</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/00458u_result.jpg"
+                                data-zoom-caption="raw NCC"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00458u_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/00458u_result.jpg"
+                                        alt="00458u texture-weighted NCC result" loading="lazy"></a>
+                                <figcaption>Texture-weighted NCC</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h5>01007a</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/01007a_result.jpg"
+                                data-zoom-caption="raw NCC"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01007a_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01007a_result.jpg"
+                                        alt="01007a texture-weighted NCC result" loading="lazy"></a>
+                                <figcaption>Texture-weighted NCC</figcaption>
+                            </figure>
+                        </div>
+                    </div>
+                    <div class="comparison-item">
+                        <h5>01657u</h5>
+                        <div class="comparison-pair">
+                            <figure data-zoom-src="comparison_images/raw_ncc_5pct_results/01657u_result.jpg"
+                                data-zoom-caption="raw NCC"><a target="_blank" rel="noopener"
+                                    href="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01657u_result.jpg"><img
+                                        src="https://raw.githubusercontent.com/n-zhao12/SYDE671-assignments/main/Assignment1/Part2/texture_weighted_ncc_results/01657u_result.jpg"
+                                        alt="01657u texture-weighted NCC result" loading="lazy"></a>
+                                <figcaption>Texture-weighted NCC</figcaption>
+                            </figure>
+                        </div>
+                    </div>
                 </div>
             </article>
         </section>
@@ -353,20 +435,21 @@
             <div class="grid">
                 <article class="card">
                     <h3>Selected method</h3>
-                    <p>The pyramid narrows full-resolution search to local refinements. Overlap-aware scoring and edge
-                        exclusion reduce false matches from rolled pixels and plate borders. Texture weighting
-                        emphasizes detailed regions.</p>
+                    <p>Our final pipeline uses pyramid alignment with raw NCC and a 5% edge exclusion. The pyramid
+                        makes large translations practical to search; valid-overlap scoring avoids comparing wrapped
+                        pixels, and the edge margin reduces the influence of plate borders on the NCC score. In the
+                        comparisons above, the 5% margin gave better alignments than scoring all the way to the overlap
+                        edges.</p>
                 </article>
                 <article class="card">
-                    <h3>Alternative metrics</h3>
-                    <p>Gradient-magnitude NCC and texture-weighted NCC were evaluated against the selected method.
-                        Gradient NCC was less reliable on the examples reviewed, while texture weighting produced
-                        similar-looking results. These comparisons helped confirm raw NCC with 5% edge exclusion as
-                        the method used for the main result set.</p>
+                    <h3>Other experiments</h3>
+                    <p>Gradient-magnitude NCC was less reliable than the selected method in the examples reviewed.
+                        Texture-weighted NCC produced very similar results without a consistent improvement. A wider
+                        final-resolution search on 01007a also selected the same shifts as the standard refinement.
+                        These tests supported keeping raw NCC with 5% edge exclusion as our final method. Automatic
+                        contrast stretching is applied to each reconstructed image for display.</p>
                 </article>
             </div>
-            <p class="muted">Result previews load from the public GitHub repository. Keep it public or copy the images
-                into the published docs folder and update their paths.</p>
         </section>
         <section class="section callout">
             <p><strong>Code and reproducibility:</strong> See the <a
@@ -388,14 +471,14 @@
             images.forEach((figure, index) => {
                 const image = figure.querySelector("img");
                 const filename = new URL(image.src).pathname.split("/").pop();
-                const caption = figure.querySelector("figcaption").textContent;
+                const caption = figure.querySelector("figcaption").textContent.toLowerCase();
                 let methodFolder;
                 if (caption.includes("no exclusion")) {
                     methodFolder = "NCC_results";
                 } else if (methodTitle.includes("Gradient")) {
-                    methodFolder = index === 0 ? "raw_ncc_5pct_results" : "gradient_ncc_results";
+                    methodFolder = "gradient_ncc_results";
                 } else if (methodTitle.includes("Texture-weighted")) {
-                    methodFolder = index === 0 ? "raw_ncc_5pct_results" : "texture_weighted_ncc_results";
+                    methodFolder = "texture_weighted_ncc_results";
                 } else {
                     methodFolder = "raw_ncc_5pct_results";
                 }
@@ -405,7 +488,8 @@
             });
             const details = document.createElement("details");
             details.className = "detail-zoom";
-            details.innerHTML = "<summary>Show 3× center-detail comparison</summary>";
+            details.open = true;
+            details.innerHTML = "<summary>3× center-detail comparison</summary>";
 
             const zoomPair = document.createElement("div");
             zoomPair.className = "zoom-pair";
@@ -422,6 +506,22 @@
                 caption.textContent = figure.querySelector("figcaption").textContent;
                 zoomFigure.append(frame, caption);
                 zoomPair.append(zoomFigure);
+
+                const comparisonSrc = figure.dataset.zoomSrc;
+                if (comparisonSrc) {
+                    const comparisonFigure = document.createElement("figure");
+                    const comparisonFrame = document.createElement("div");
+                    comparisonFrame.className = "zoom-frame";
+                    const comparisonImage = source.cloneNode();
+                    comparisonImage.src = comparisonSrc;
+                    comparisonImage.alt = `${item.querySelector("h5").textContent}, selected raw NCC with 5 percent edge exclusion, 3× center detail`;
+                    comparisonImage.removeAttribute("loading");
+                    comparisonFrame.append(comparisonImage);
+                    const comparisonCaption = document.createElement("figcaption");
+                    comparisonCaption.textContent = figure.dataset.zoomCaption;
+                    comparisonFigure.append(comparisonFrame, comparisonCaption);
+                    zoomPair.append(comparisonFigure);
+                }
             });
             details.append(zoomPair);
             item.append(details);
