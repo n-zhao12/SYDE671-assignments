@@ -86,7 +86,8 @@ output = np.zeros((out_h, out_w), dtype=np.float64)</code></pre>
             <p>Both outputs pass <code>np.allclose</code> against
                 <code>scipy.signal.convolve2d(image, kernel, mode="same", boundary="fill", fillvalue=0)</code>. The
                 correctness case uses an asymmetric 2 &times; 3 kernel, so it checks kernel flipping and even-kernel
-                alignment rather than only the easier symmetric-box case.</p>
+                alignment rather than only the easier symmetric-box case.
+            </p>
             <div class="table-wrap">
                 <table>
                     <caption>Single-run timings for a 9 &times; 9 box kernel (output shape: 128 &times; 96)
@@ -131,7 +132,8 @@ output = np.zeros((out_h, out_w), dtype=np.float64)</code></pre>
                 direction.</p>
             <div class="equation"><var>g</var><sub>x</sub> = <var>I</var> &lowast; <var>D</var><sub>x</sub>, &nbsp;
                 <var>g</var><sub>y</sub> = <var>I</var> &lowast; <var>D</var><sub>y</sub>, &nbsp; <var>M</var> =
-                &radic;(<var>g</var><sub>x</sub><sup>2</sup> + <var>g</var><sub>y</sub><sup>2</sup>)</div>
+                &radic;(<var>g</var><sub>x</sub><sup>2</sup> + <var>g</var><sub>y</sub><sup>2</sup>)
+            </div>
             <figure class="result">
                 <a href="./results/part1_2_finite_difference.png"><img src="./results/part1_2_finite_difference.png"
                         alt="Cameraman input, Dx and Dy responses, gradient magnitude, and thresholded binary edges."
@@ -146,7 +148,8 @@ output = np.zeros((out_h, out_w), dtype=np.float64)</code></pre>
                 of responses, subject to ties. It is a compromise: the person's silhouette and camera remain visible,
                 while many weaker variations are suppressed. Some grass texture remains, and weak or broken boundaries
                 are lost. A lower threshold retains more detail but also more clutter; a higher threshold cleans the map
-                at the cost of continuity.</p>
+                at the cost of continuity.
+            </p>
         </section>
 
         <section class="report-section" id="dog">
@@ -198,14 +201,14 @@ output = np.zeros((out_h, out_w), dtype=np.float64)</code></pre>
         <section class="report-section" id="orientation">
             <p class="eyebrow">Bells &amp; Whistle</p>
             <h2>Direction as hue, strength as brightness</h2>
-            <p>I compute orientations without calling a built-in angle function. For each gradient, the ratio of the
-                smaller absolute component to the larger is in [0, 1]. Half-angle range reduction makes the
-                inverse-tangent series converge quickly; 16 terms recover the acute angle. Component ordering, signs,
-                and quadrant corrections then place it in [0, 2&pi;). A zero gradient is assigned angle zero but
-                displayed black because its magnitude is zero.</p>
-            <div class="equation"><var>t</var> = <var>r</var> / (1 + &radic;(1 + <var>r</var><sup>2</sup>)), &nbsp;
-                <var>&theta;</var><sub>acute</sub> &asymp; 2(<var>t</var> &minus; <var>t</var><sup>3</sup>/3 +
-                <var>t</var><sup>5</sup>/5 &minus; &hellip;)</div>
+            <p>I compute the angle with <code>np.arctan(gy / gx)</code>, then correct for the quadrant using the signs
+                of <code>gx</code> and <code>gy</code>. When <code>gx</code> is zero, I assign the vertical directions
+                directly as &pi;/2 or 3&pi;/2; a zero gradient is assigned angle zero. This handles all four quadrants
+                without ambiguity while keeping the angle in [0, 2&pi;).</p>
+            <div class="equation"><var>&theta;</var><sub>0</sub> = arctan(<var>g</var><sub>y</sub> /
+                <var>g</var><sub>x</sub>), &nbsp; quadrant correction: add &pi; when <var>g</var><sub>x</sub> &lt; 0;
+                &nbsp; <var>&theta;</var> = <var>&theta;</var><sub>0</sub> mod 2&pi;
+            </div>
             <p>HSV hue encodes the angle, saturation is one, and value is gradient magnitude divided by the maximum
                 magnitude. Converting HSV to RGB makes edges with similar orientations share a hue while weak texture
                 stays dim. Hue measures the directed intensity gradient, so reversing contrast shifts the hue by half a
@@ -220,7 +223,9 @@ output = np.zeros((out_h, out_w), dtype=np.float64)</code></pre>
                     visualization.</figcaption>
             </figure>
         </section>
-        <p class="source-link"><a href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment2/Part1">Part 1 source files</a></p>
+        <p class="source-link"><a
+                href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment2/Part1">Part 1 source
+                files</a></p>
     </main>
     <footer class="site-footer">
         <div class="container"><a href="../index.html">&larr; Assignment 2 overview</a><a

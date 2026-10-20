@@ -44,13 +44,15 @@
                 <var>G</var> &lowast; <var>I</var>) = [(1 + &alpha;)&delta; &minus; &alpha;<var>G</var>] &lowast;
                 <var>I</var>
             </div>
-            <p>Here, <var>&alpha;</var> is the sharpening amount: it controls how strongly the high-frequency detail is
-                added back. An amount of 0 would leave the image unchanged; larger amounts make existing detail more
-                pronounced and can create halos. I compare <var>&alpha;</var> = 0.5, 1.0, and 1.5 with a Gaussian
-                standard deviation of 3 pixels. The explicit kernel is 25 &times; 25, extending four standard
-                deviations in each direction. Reflect-101
-                boundary handling avoids introducing a black exterior into these color photographs. Because the kernel
-                is symmetric, OpenCV's correlation operation gives the same result as convolution.</p>
+            <p>Here, <var>&alphr> is the shar</div>
+                    pening amount: it controls how strongly the high-frequency detail is
+                    added back. An amount of 0 would leave the image unchanged; larger amounts make existing detail more
+                    pronounced and can create halos. I compare <var>&alpha;</var> = 0.5, 1.0, and 1.5 with a Gaussian
+                    standard deviation of 3 pixels. The explicit kernel is 25 &times; 25, extending four standard
+                    deviations in each direction. Reflect-101
+                    boundary handling avoids introducing a black exterior into these color photographs. Because the
+                    kernel
+                    is symmetric, OpenCV's correlation operation gives the same result as convolution.</p>
             <figure class="result">
                 <a href="./results/2_1_sharpening/taj_unsharp.png"><img src="./results/2_1_sharpening/taj_unsharp.png"
                         alt="Taj Mahal original, Gaussian blur, high-frequency residual, and sharpening strengths 0.5, 1, and 1.5."
@@ -142,109 +144,123 @@
                 Fourier spectrum:
             </p>
             <div class="equation">\(S(I) = \log\!\left(1 + \left|\operatorname{fftshift}\!\left(\ <div class="equation">
-                    <var>S</var>(<var>I</var>) = log(1 + |fftshift(FFT<sub>2</sub>(<var>I</var>))|)</div>
-                <p>The low-pass spectrum concentrates
-                    energy near the center; the high-pass component suppresses the central low frequencies relative to
+                    <var>S</var>(<var>I</var>) = log(1 + |fftshift(FFT<sub>2</sub>(<var>I</var>))|)
+                </div>
+                <p>The low-um concentrates
+
+                    energy near the center; the high-pass component suppresses the central low fr equencies relative to
                     outer
                     detail. The hybrid combines the two contributions. Each spectrum is contrast-normalized for
                     readability,
-                    so brightness should not be compared as an absolute energy measurement across panels.</p>
+
+                    so brigh tness should not be compared as an absolute energy measurement across panels.</p>
                 <figure class="result">
                     <a href="./results/2_2_hybrids/derek_nutmeg_02_fourier_transforms.png"><img
-                            src="./results/2_2_hybrids/derek_nutmeg_02_fourier_transforms.png"
-                            alt="Log-magnitude Fourier spectra of Derek, aligned Nutmeg, low-pass Derek, high-pass Nutmeg, and the final hybrid."
+                            src="./ results/2_2_hybrids/derek  _nutmeg_02_fouri  er_transforms.png"
+                            alt="Log-magnitude Fourier spectra  of Derek, aligned Nutme   g, low-pass Derek, high-pass Nutmeg, and the final hybrid."
                             loading="lazy"></a>
-                    <figcaption>Five spectra trace the inputs through filtering to the final hybrid. Finite-image
+                    <figcaption>Five spectra trace the inputs through filtering to the final hybrid. Finite-ima ge
                         boundaries, warping, the support mask, and final clipping can also affect the displayed spectra.
                     </figcaption>
                 </figure>
                 <figure class="result portrait">
-                    <a href="./results/2_2_hybrids/derek_nutmeg_05_final_hybrid.png"><img
-                            src="./results/2_2_hybrids/derek_nutmeg_05_final_hybrid.png"
-                            alt="Final Derek and Nutmeg grayscale hybrid using low-pass sigma 8 and high-pass sigma 5."
+                    <a href="./results/2_2_hybrids/derek_nutm   eg_05_final_hybr id.png"><img s
+                            rc="./result   s/2_2_hybrids/derek_nutmeg_05_fina   l_hybrid.png"
+                            alt="Final Derek and Nutmeg grayscale hybrid usin    g low-pass sigma 8 and high-pass sigma 5."
                             loading="lazy"></a>
-                    <figcaption>Final grayscale hybrid. Nutmeg's facial detail is prominent at this size; Derek
-                        contributes
+                    <figcap tion>Final grayscale hybrid. Nutmeg's facial detail is prominent at this size; Derek
+                        contribu tes
                         the smoother head and face structure. Background mismatch remains a limitation.</figcaption>
                 </figure>
-                <h3>Two additional custom hybrids</h3>
-                <p>The custom pairs use corresponding landmarks for alignment and the same low/high sigma settings, 8
-                    and 5.
-                    These examples show the original inputs and final hybrid rather than repeating the full analysis.
-                </p>
-                <div class="table-wrap">
-                    <table>
-                        <caption>Frequency roles in the three hybrid examples</caption>
-                        <thead>
-                            <tr>
-                                <th scope="col">Pair</th>
-                                <th scope="col">Broad, low-frequency identity</th>
-                                <th scope="col">Fine, high-frequency identity</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Derek / Nutmeg</td>
-                                <td>Derek</td>
-                                <td>Nutmeg</td>
-                            </tr>
-                            <tr>
-                                <td>Harry / Voldemort</td>
-                                <td>Voldemort</td>
-                                <td>Harry</td>
-                            </tr>
-                            <tr>
-                                <td>Lion / tiger</td>
-                                <td>Lion</td>
-                                <td>Tiger</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <figure class="result">
-                    <a href="./results/2_2_hybrids/harry_voldemort_hybrids.png"><img
-                            src="./results/2_2_hybrids/harry_voldemort_hybrids.png"
-                            alt="Original Voldemort and Harry portraits with their final grayscale hybrid."
-                            loading="lazy"></a>
-                    <figcaption>Harry / Voldemort: two recognizable faces provide a change of identity. Broad face
-                        appearance comes from Voldemort; sharper facial features come from Harry. Different face
-                        proportions
-                        limit perfect correspondence.</figcaption>
-                </figure>
-                <figure class="result">
-                    <a href="./results/2_2_hybrids/lion_tiger_hybrids.png"><img
-                            src="./results/2_2_hybrids/lion_tiger_hybrids.png"
-                            alt="Original lion and tiger photographs with their final grayscale hybrid."
-                            loading="lazy"></a>
-                    <figcaption>Lion / tiger: tiger stripes provide strong high-frequency cues over the lion's broader
-                        head
-                        structure. High-contrast texture can remain conspicuous and compete with the intended distant
-                        identity.</figcaption>
-                </figure>
-                <h3>Bells &amp; Whistles</h3>
-                <p>I compare grayscale with three alternatives: color only in the high-frequency component, color only
-                    in
-                    the low-frequency component, and both components in color. For Derek/Nutmeg, low-frequency color is
-                    the
-                    more useful choice for reinforcing Derek's broad skin-tone identity while preserving the cat's
-                    mostly
-                    luminance-based detail. The high-frequency-only version looks nearly grayscale because high-pass
-                    filtering removes broad color regions; color remains mainly in fine edges and texture. Using both is
-                    more vivid, but the competing colors and backgrounds can also make the composite less coherent.</p>
-                <figure class="result">
-                    <a href="./results/2_2_hybrids/derek_nutmeg_color_variants.png"><img
-                            src="./results/2_2_hybrids/derek_nutmeg_color_variants.png"
-                            alt="Derek and aligned Nutmeg with grayscale, color-high-only, color-low-only, and both-color hybrid variants."
-                            loading="lazy"></a>
-                    <figcaption>For this pair, low-frequency color is a useful compromise: it adds broad skin tone while
-                        keeping Nutmeg's fine detail. Grayscale remains the clearest neutral baseline.</figcaption>
-                </figure>
+                < h 3>Two additio nal custom hybrids</h3>
+                    <p>The custom pairs use corresponding landmarks for alignment and the same low /high sigma settings,
+                        8 and 5.
+                        These examples show the original inputs and final hybrid rather than repeating the full
+                        analysis.</p>
+                    <div class="table-wrap">
+
+                        <table>
+                            <caption>Frequency roles in the three hybrid examples</caption>
+
+                            <t head>
+                                <tr>
+                                    <th scope="col">Pair</th>
+                                    <th scope="col">Broad, low-freq uency identity</th>
+                                    <th s cope="  col">Fine, high-frequency id entity</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Derek / Nutmeg</td>
+                                        <td>Derek< /td>
+                                        <td>Nutmeg</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Ha rry / Voldemort</td>
+                                        <td>Voldemort</td>
+                                        <td>Harry</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Lion / tiger</td>
+                                        <td>Li on</td>
+                                        <td>Tige r</td>
+                                    </tr>
+                                    </tb ody>
+                        </table>
+                    </div>
+                    <figure class="res ult">
+                        <a href="./results/2_  2_hybrids/harry_ voldemort_hybrids.png">
+                            < img src="./re    sults/2_2_hybrids/harry_voldemort_hybr    ids.png"
+                                alt="Origina    l Voldemort and Harry portraits with their final grayscale hybrid."
+                                loading="lazy">
+                        </a>
+                        <figcaption>Harry / Voldemort: two recognizable faces provi de a change of identity. Broad face
+                            appearance comes from Vol demort; sharper facial f eatures come from Har ry. Different fa ce
+                            proportions
+                            limit perfect correspondence.</figcaption>
+                        </figu re>
+                        <fig ure class="result">
+                            <a href="./results/2_2_hybrids/lion_tiger_hybrids.pn
+      g                 "><img src="./results/2_2_hybrids/lion_tiger_hybrids.  png"
+                                    alt="Original lion and tiger photographs with t    heir final grayscale hybrid."
+                                    loading="lazy"></a>
+                            <figcaption>Lion / tiger: tiger stripes provide strong high-frequency c ues over the lion's
+                                broa der head
+                                structure. High-contrast texture can remain con
+                                s picuous and compete w ith the intended distant
+                                identity.</figcaption>
+                    </figure>
+                    <h3>Bells &a
+                        m p; Whi stles</h3>
+                    <p>I compare grayscale with three alternatives: color only in the high-frequency component, color
+                        only in
+                        the low-freque ncy componen t, and both components in color. For Derek/Nutmeg, low-frequency c
+                        olor is the
+                        more useful choice for reinforcing Derek's broad skin-tone identity while
+                        p reserving the cat's mostly
+                        luminance-based detail. The high-frequency-only version looks nearly graysca
+                        l e because high-pass
+                        filtering removes broad color regions; color remains mainly in fine edges and t
+                        e xture. U sing both is
+                        more vivid, but the competing colors and backgrounds can also make the composite less coherent.
+                    </p>
+                    <figure class="result">
+                        <a href="./results/2_2_hybrids/derek_nutmeg_color_variants.png">
+                            <im g src="./results/2_2_hybrids/derek_nutmeg_color_variants.png"
+                                alt="Derek and aligned Nutme   g with grayscale , color-high-only, color-low-only, and both-color hybrid variants."
+                                loading="lazy">
+                        </a>
+                        <figcaption>For this pair, low-frequency color is a useful compromise: it adds broad skin tone
+                            while
+                            keeping Nutmeg's fine detail. Grayscale rem ains the clearest neutra l baseline.</figcapti
+                                on>
+                    </figure>
         </section>
 
         <section class="report-section" id="stacks">
-            <p class="eyebrow">2.3 &middot; Gaussian and Laplacian stacks</p>
+            <p class="eyebrow">2.3 &mid dot; Gaussian and Laplacian stacks</p>
             <h2>Five scales, one image size</h2>
-            <p>Unlike a pyramid, a stack never downsamples. I keep five full-resolution levels: the original image
+            <p>Un like a pyramid, a stack never downsamples. I keep five full-resolution levels: the original image
                 followed by Gaussian levels at effective standard deviations 2, 4, 8, and 16 pixels. Successive blurs
                 use incremental sigmas whose variances add to the target variance. No built-in pyramid functions are
                 used.</p>
@@ -256,9 +272,8 @@
                 <var>I</var> = &sum;<sub>i=0</sub><sup>4</sup> <var>L</var><sub>i</sub>
             </div>
             <figure class="result"><a href="./results/2_3_stacks/apple_gaussian_stack.png"><img
-                        src="./results/2_3_stacks/apple_gaussian_stack.png"
-                        alt="Five same-sized apple Gaussian-stack levels from the original through effective sigma 16."
-                        loading="lazy"></a>
+                        src="./results/2_3_stacks/apple_gaussian_stack.png" alt="Five same-sized apple Gaussian-sta
+            ck levels from the original through effective sigma 16." loading="lazy"></a>
                 <figcaption>Apple Gaussian stack: texture disappears first, while broader fruit shape and illumination
                     survive at the coarsest level.</figcaption>
             </figure>
@@ -298,137 +313,178 @@
                     differences
                     but also mix fine texture across too wide a region. Instead, I build a Gaussian stack of the mask
                     and
-                    use its corresponding level to weight each Laplacian band.</p>
-                <div class="equation"><var>C</var><sub>i</sub> = <var>M</var><sub>i</sub><var>L</var><sub>A,i</sub> + (1
-                    &minus; <var>M</var><sub>i</sub>)<var>L</var><sub>B,i</sub>, &nbsp; <var>C</var> =
-                    &sum;<sub>i=0</sub><sup>4</sup> <var>C</var><sub>i</sub></div>
-                <p>Mask value 1 selects A and 0 selects B. I blur the binary mask before building its stack. Each
+                    use its corresp
+                    onding level to weight each Laplacian band.</p>
+                <div class="equation"><var>C</var><sub>i</sub> = <var>M</va r><sub>i</sub><var>L</var><sub>A,i</sub> +
+                        (1
+                        &minus; <var>M</var><sub>i</sub>)<var>L</var><sub>B,i</sub>, &nbs
+                        p ; <va r>C</var> =
+                    &sum;<sub>i=0</sub><sup>4</sup> <var>C</var><sub>i</ sub>
+                </div>
+                <p>Mask value 1 selects A and 0 selects B. I blur the binary mask before building its stack. Ea ch
                     coarser
-                    mask level has a wider transition, so fine texture changes across a narrow boundary while broad
+                    mask level has a wider transition, so fine texture changes across a narro w boundary while broad
                     color
-                    and illumination changes blend gradually across a wider area.</p>
+                    and illumination changes blend grad ually across a wider area.</p>
                 <h3>Sample Oraples: vertical and horizontal seams</h3>
-                <p>The sample masks are step functions selecting the left or top half of the apple. These validate both
-                    straight-seam orientations before moving to non-straight masks.</p>
-                <figure class="result"><a href="./results/2_4_blending/oraple_vertical_overview.png"><img
+
+                <p>The sample masks are s tep functions selecting the left or top half of the apple. These validate both
+
+                    s traight -seam orientations before moving to non-straight masks.</p>
+                <figure class="result"> <a href="./results/2_4_blending/oraple_vertical_overview .png"><img
                             src="./results/2_4_blending/oraple_vertical_overview.png"
-                            alt="Apple and orange, vertical step mask, masked inputs, and the vertical-seam Oraple."
+                            alt="Apple and o range, vertical step mask, masked inputs, and the vertical-seam Orapl    e."
                             loading="lazy"></a>
-                    <figcaption>Vertical Oraple: apple on the left, orange on the right, with scale-dependent mask
+                    <figcaption>Vertical Oraple: apple on the left, orange on the r ight, with scale-dependent mask
                         smoothing.</figcaption>
                 </figure>
-                <figure class="result"><a href="./results/2_4_blending/oraple_horizontal_overview.png"><img
-                            src="./results/2_4_blending/oraple_horizontal_overview.png"
-                            alt="Apple and orange blended using a horizontal step mask, with masked contributions shown."
+                <figure class="result"><a href="./results/2_4_blending/oraple_horizontal_overview.png"> <img
+                            src="./r    esults/2_4_blending/oraple_horizontal_overview.png"
+                            alt="Apple and orange blended using a ho    rizontal step mask, with masked contr    ibutions shown."
                             loading="lazy"></a>
-                    <figcaption>Horizontal Oraple: apple above and orange below. Different source shapes can remain
+                    <figcaption>Horizontal Oraple: apple above and orange below. Di fferent source shapes can remain
                         visible
-                        even when the mask transition is smooth.</figcaption>
+                        even when the mask trans ition is smooth.</figcaption>
                 </figure>
-                <h3>Custom blend 1: a volleyball inside a tennis ball</h3>
-                <p>The tennis image is the background, and a small circular region reveals volleyball texture. The
-                    circle is
-                    currently centered at 50% of the image width and height, with radius 18% of the shorter side. The
-                    mask
-                    is one outside the circle and zero inside, so tennis remains outside and volleyball appears inside.
-                    This
-                    curved mask is the main tennis/volleyball result.</p>
-                <figure class="result"><a href="./results/2_4_blending/tennis_volleyball_overview.png"><img
-                            src="./results/2_4_blending/tennis_volleyball_overview.png"
-                            alt="Tennis-ball background and volleyball foreground combined through a small centered circular mask, alongside both masked inputs."
+                <h3>Custom blend 1: a volleyball inside a tennis ball</ h3>
+                    <p>The tennis image i s the background, and a small circular region reveals volleyball texture. The
+                        circle is
+
+                        c urrently centered at 50% of the image width and height, with radius 18% of the shorter side.
+                        The m ask
+                        is one outside the circle and zero inside, so tennis remains outside and volleyball appears
+                        inside. This
+                        curved mask is the main tennis/volleyball
+                        result.</p>
+                    <fi gure class="result"><a href="./results/2_4_blending/tennis_volleyball_overview.png"><img
+                                src="./    results/2_4_blending/tennis_volleyball_overview.png"
+                                alt="Tennis-ball backg
+                   round a    nd volleyball foreground combined through a small centered circular mas    k, alongside both masked inputs." loading="lazy"></a>
+                        <figcaption>The two familiar sports textures become one imagined surface. Multiresolution smooth
+                            ing
+                            softens the transition, but cannot remove every difference in texture scale, geometry, or
+                            illumination.</figcaption>
+            </figure>
+            <h3>Frequ ency contributions</h3>
+            <p>These panels show how the circular blend is assembled. Columns are masked tennis,
+                masked volleyball, and their sum; rows are grouped high frequencies, grouped medium frequen cies, and
+                the
+                low-frequency resi dual. Panels (j) and (k) sum every weighted band from each source. Th eir unclippe d
+                sum
+                is the same image reconstructed by the blending algorithm; the d isplayed result is clipped to [0, 1].
+            </p>
+            <figure class="result"><a href="./results/2_4_ble
+                   nding/tennis_volleybal    l_laplacian_process.png"><img src="./results/2_4_blending/tennis_volleyball_
+                 l  aplacian_process.png" alt="Twelve labeled panels showing high, medium, low and reconstructed t
+              e     nnis  and volleyba   ll con   tributions t o the circular blend." loading="lazy"></a>
+                <figcaption>Signed high and medium bands ar e enhanced for visibility, with a shared scale within each
+                    row; gray indic ates approximately zero detail.</figcaption>
+            </figure>
+            <h3>Custom blend 2: a galaxy beneath a swimming pool</h3>
+            <p>This original 2.4 result uses the galaxy and the original pool photograph with an automatically
+                segmented binary silhouette mask. The same galaxy-shaped region selects the galaxy in both pool
+                experiments, so the gradient-map comparison changes only the pool image.</p>
+            <figure class="result"><a href="./results/2_4_blending/galaxy_pool_overview.png"><img
+                        src="./results/2_4_blending/galaxy_pool_overview.png"
+                        alt="Galaxy and original swimming-pool photograph with an automatically segmented binary galaxy-silhouette mask, masked inputs, and final blend."
+                        loading="lazy"></a>
+                <figcaption>The original creative blend uses the same multiresolution method as the other 2.4 results.
+                    The mask edge is softened by its Gaussian stack at each frequency.</figcaption>
+            </figure>
+            <figure class="result"><a href="./results/2_4_blending/galaxy_pool_laplacian_process.png"><img
+                        src="./results/2_4_blending/galaxy_pool_laplacian_process.png"
+                        alt="Twelve-panel frequency decomposition of the irregularly masked galaxy and pool contributions and their reconstructed blend."
+                        loading="lazy"></a>
+                <figcaption>The process figure separates star and water texture from broad structure; all five
+                    Laplacian levels contribute to the reconstruction.</figcaption>
+            </figure>
+            <details>
+                <summary>Bells &amp; Whistles: gradient-mapped pool and galaxy silhouette</summary>
+                <p>This separate experiment replaces only the pool with the gradient-mapped version. Both blends use
+                    the exact same automatically segmented binary galaxy silhouette, extracted by thresholding,
+                    morphological closing, and largest-component selection. This keeps the comparison focused on the
+                    pool image.</p>
+                <figure class="result"><a href="./results/2_4_blending/galaxy_pool_pool_comparison.png"><img
+                            src="./results/2_4_blending/galaxy_pool_pool_comparison.png"
+                            alt="Side-by-side galaxy blends using the original pool and gradient-mapped pool, with the same binary galaxy silhouette mask."
                             loading="lazy"></a>
-                    <figcaption>The two familiar sports textures become one imagined surface. Multiresolution smoothing
-                        softens the transition, but cannot remove every difference in texture scale, geometry, or
-                        illumination.</figcaption>
+                    <figcaption>Same galaxy, same binary silhouette mask, two pool images. Only the pool color mapping
+                        changes.</figcaption>
                 </figure>
-                <h3>Frequency contributions</h3>
-                <p>These panels show how the circular blend is assembled. Columns are masked tennis,
-                    masked volleyball, and their sum; rows are grouped high frequencies, grouped medium frequencies, and
-                    the
-                    low-frequency residual. Panels (j) and (k) sum every weighted band from each source. Their unclipped
-                    sum
-                    is the same image reconstructed by the blending algorithm; the displayed result is clipped to [0,
-                    1].
+                <figure class="result"><a href="./results/2_4_blending/galaxy_pool_gradient_map_overview.png"><img
+                            src="./results/2_4_blending/galaxy_pool_gradient_map_overview.png"
+                            alt="Gradient-mapped swimming pool blended with the galaxy using an automatically segmented binary galaxy silhouette."
+                            loading="lazy"></a>
+                    <figcaption>The binary mask keeps the full main spiral as the foreground and reveals the
+                        gradient-mapped pool outside its silhouette.</figcaption>
+                </figure>
+                <figure class="result"><a
+                        href="./results/2_4_blending/galaxy_pool_gradient_map_laplacian_process.png"><img
+                            src="./results/2_4_blending/galaxy_pool_gradient_map_laplacian_process.png"
+                            alt="Laplacian process figure for the separate gradient-map pool and galaxy-silhouette blend."
+                            loading="lazy"></a>
+                    <figcaption>The additional process figure uses the same automatically generated binary mask and
+                        all five Laplacian levels.</figcaption>
+                </figure>
+            </details>
+            <details>
+                <summary>Supplementary custom straight-seam example </summary>
+                <p>This se parate vertical-step-mask version uses the same tennis and volleyball inputs. It
+                    supplements,
+                    rath er than replaces, the circular main result and tests a straight seam on a custom pair .
                 </p>
-                <figure class="result"><a href="./results/2_4_blending/tennis_volleyball_laplacian_process.png"><img
-                            src="./results/2_4_blending/tennis_volleyball_laplacian_process.png"
-                            alt="Twelve labeled panels showing high, medium, low and reconstructed tennis and volleyball contributions to the circular blend."
+                <figure class="result">
+                    < a href="./result  s/2_4_blending/tennis_volleyball_vertical_overview.png"><img
+                            src="./results/2_4_blending/tennis_volleyball_vertical_overview.png"
+                            alt="Supplementary straight vertical seam between tennis and volleyball images, separate from the circular main re    sult."
                             loading="lazy"></a>
-                    <figcaption>Signed high and medium bands are enhanced for visibility, with a shared scale within
-                        each
-                        row; gray indicates approximately zero detail.</figcaption>
-                </figure>
-                <h3>Custom blend 2: a galaxy beneath a swimming pool</h3>
-                <p>A deterministic wavy-ellipse mask places the galaxy inside the pool image, creating an irregular
-                    opening
-                    rather than a straight seam. The mask uses several sinusoidal perturbations and a fixed random seed
-                    of
-                    23. Bright pool caustics surround the darker galaxy; the impossible change of setting is
-                    intentional.
-                </p>
-                <figure class="result"><a href="./results/2_4_blending/galaxy_pool_overview.png"><img
-                            src="./results/2_4_blending/galaxy_pool_overview.png"
-                            alt="Galaxy and swimming pool sources, wavy irregular mask, masked source images, and the galaxy-in-pool blend."
-                            loading="lazy"></a>
-                    <figcaption>An imagined portal in water. The broad brightness difference is harder to hide than in
-                        the
-                        fruit example, so a dark transition remains part of the visual result.</figcaption>
-                </figure>
-                <figure class="result"><a href="./results/2_4_blending/galaxy_pool_laplacian_process.png"><img
-                            src="./results/2_4_blending/galaxy_pool_laplacian_process.png"
-                            alt="Twelve-panel frequency decomposition of masked galaxy and pool contributions and their reconstructed blend."
-                            loading="lazy"></a>
-                    <figcaption>The second process figure separates star and water texture from the broad light-dark
-                        structure. All five Laplacian levels contribute to the reconstruction.</figcaption>
-                </figure>
-                <details>
-                    <summary>Supplementary custom straight-seam example</summary>
-                    <p>This separate vertical-step-mask version uses the same tennis and volleyball inputs. It
-                        supplements,
-                        rather than replaces, the circular main result and tests a straight seam on a custom pair.</p>
-                    <figure class="result"><a href="./results/2_4_blending/tennis_volleyball_vertical_overview.png"><img
-                                src="./results/2_4_blending/tennis_volleyball_vertical_overview.png"
-                                alt="Supplementary straight vertical seam between tennis and volleyball images, separate from the circular main result."
-                                loading="lazy"></a>
-                        <figcaption>Tennis on the left, volleyball on the right. This is a seam test, not the selected
-                            creative blend.</figcaption>
-                    </figure>
-                </details>
+                        <figcaption>Tennis on the left, volleyball on the right. This is a seam test, not the
+                            selected
+                            creative blend.</figca ption>
+                            </fig ure>
+            </details>
         </section>
 
         <section class="report-section" id="color-blending">
             <p class="eyebrow">Bells &amp; Whistles</p>
-            <h2>Color carries part of the idea</h2>
-            <p>Here the effect to explore is how well multiresolution blending joins two images while keeping their
-                materials recognizable. I use the same mask and blending method for color and grayscale versions, so the
-                comparison shows what color contributes. I prefer color for both sources in the galaxy/pool blend
-                because
-                their distinct hues help the imagined scene read clearly; color also makes mismatched boundaries more
-                visible.</p>
-            <figcaption>Tennis / volleyball: the tennis background's distinctive color helps identify the source
-                material, while grayscale emphasizes differences in texture and brightness. Color supports
-                recognition but can also reveal a color mismatch near the boundary.</figcaption>
-            </figure>
-            <figure class="result"><a href="./results/2_4_blending/galaxy_pool_color_vs_grayscale.png"><img
-                        src="./results/2_4_blending/galaxy_pool_color_vs_grayscale.png"
-                        alt="Galaxy and pool blend in color compared with the same blend in grayscale."
+            <h2>Texture in grayscale, palette in color</h2>
+            <p>For tennis/volleyball, I compare the same circular blend in color and grayscale. Removing color makes
+                the ball-surface texture and panel boundaries easier to inspect; color helps identify the two materials
+                but can compete with those texture cues.</p>
+            <figure class="result"><a href="./results/2_4_blending/tennis_volleyball_color_vs_grayscale.png"><img
+                        src="./results/2_4_blending/tennis_volleyball_color_vs_grayscale.png"
+                        alt="The same circular tennis and volleyball blend shown in color and grayscale to compare material color with surface texture."
                         loading="lazy"></a>
-                <figcaption>Galaxy / pool: blue water and the warmer galaxy core make the scene more legible and more
-                    expressive. In grayscale, water and stars compete mainly through luminance. I prefer both sources in
-                    color for this creative composite.</figcaption>
+                <figcaption>Grayscale makes the fine pebbled textures and volleyball panel edges easier to compare;
+                    color makes the tennis and volleyball surfaces more immediately recognizable.</figcaption>
+            </figure>
+            <p>For galaxy/pool, I use the same binary galaxy silhouette, same multiresolution blend, and two pool
+                versions. The second pool image is gradient-mapped with tones chosen to echo the galaxy. This isolates
+                how palette coordination changes the composite.</p>
+            <figure class="result"><a href="./results/2_4_blending/galaxy_pool_pool_comparison.png"><img
+                        src="./results/2_4_blending/galaxy_pool_pool_comparison.png"
+                        alt="Side-by-side galaxy blends using the original swimming pool and a gradient-mapped pool, with identical galaxy mask and blend settings."
+                        loading="lazy"></a>
+                <figcaption>The mapped pool shares the galaxy's dark blue and pale pink palette, making the scene
+                    feel more cohesive. The original pool keeps a more natural water color; the mapped version is a
+                    deliberate surreal effect, not a claim that color mapping repairs geometry or lighting.</figcaption>
+            </figure>
+            <figure class="result"><a href="./results/2_4_blending/galaxy_pool_gradient_map_overview.png"><img
+                        src="./results/2_4_blending/galaxy_pool_gradient_map_overview.png"
+                        alt="Gradient-mapped pool and galaxy blended with the shared automatically segmented binary galaxy mask."
+                        loading="lazy"></a>
+                <figcaption>The gradient-map experiment uses the same galaxy silhouette as the original-pool 2.4
+                    blend; only the pool image changes.</figcaption>
             </figure>
             <details>
                 <summary>Sample Oraple color comparison</summary>
                 <figure class="result"><a href="./results/2_4_blending/oraple_vertical_color_vs_grayscale.png"><img
                             src="./results/2_4_blending/oraple_vertical_color_vs_grayscale.png"
                             alt="Vertical Oraple shown in color and grayscale." loading="lazy"></a>
-                    <figcaption>The fruit colors make the source transition immediately apparent; grayscale instead
-                        emphasizes differences in surface texture and shading.</figcaption>
+                    <figcaption>Fruit color distinguishes the sources; grayscale emphasizes surface texture and
+                        shading.</figcaption>
                 </figure>
             </details>
-            <p>Unlike hybrid images, where color placement can favor one viewing-scale identity, these blends aim to
-                preserve recognizable material from both inputs. Color in both sources is therefore useful here. It does
-                not fix misalignment or incompatible lighting; those remain source-selection and geometry problems.</p>
         </section>
         <p class="source-link"><a
                 href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment2/Part2">Part 2 source
@@ -436,8 +492,8 @@
                 href="../index.html#references">References and credits</a></p>
     </main>
     <footer class="site-footer">
-        <div class="container"><a href="../Part1/index.html">&larr; Part 1: filters &amp; edges</a><a
-                href="../index.html">Assignment 2 overview &rarr;</a></div>
+        <div class="container"><a href="../Part1/index.html">&larr; Par
+                t 1: filters &amp; edges</a><a href="../index.html">Assignment 2 overview &rarr;</aiv>
     </footer>
 </body>
 

@@ -8,22 +8,17 @@ from part1_utils import save_image
 
 
 def gradient_orientation_without_arctan2(gx: np.ndarray, gy: np.ndarray) -> np.ndarray:
-    """Evaluate the inverse-tangent series after half-angle range reduction."""
-    abs_x, abs_y = np.abs(gx), np.abs(gy)
-    largest = np.maximum(abs_x, abs_y)
-    ratio = np.divide(np.minimum(abs_x, abs_y), largest,
-                      out=np.zeros_like(largest, dtype=np.float64), where=largest > 0)
-    reduced = ratio / (1.0 + np.sqrt(1.0 + ratio ** 2))
-    power = reduced.copy()
-    angle = np.zeros_like(reduced)
-    for index in range(16):
-        angle += power / (2 * index + 1)
-        power *= -(reduced ** 2)
-    angle *= 2.0
-    angle = np.where(abs_y > abs_x, np.pi / 2 - angle, angle)
-    angle = np.where(gx < 0, np.pi - angle, angle)
-    angle = np.where(gy < 0, 2 * np.pi - angle, angle)
-    return angle % (2 * np.pi)
+    """Use arctan of the component ratio and correct its quadrant explicitly."""
+    angle = np.zeros_like(gx, dtype=np.float64)
+    nonzero = (gx != 0) | (gy != 0)
+    regular = gx != 0
+    vertical = (gx == 0) & (gy != 0)
+    angle[regular] = np.arctan(gy[regular] / gx[regular])
+    angle[regular & (gx < 0)] += np.pi
+    angle[vertical & (gy > 0)] = np.pi / 2
+    angle[vertical & (gy < 0)] = 3 * np.pi / 2
+    angle[nonzero] %= 2 * np.pi
+    return angle
 
 
 def run_orientation_section(gx: np.ndarray, gy: np.ndarray, output_dir: Path) -> np.ndarray:

@@ -17,7 +17,6 @@ STACK_OUTPUT = OUTPUT_DIR / "2_3_stacks"
 
 CUSTOM_PAIRS = (
 	("tennis_volleyball", "blendPair1_tennis_ball.jpg", "blendPair1_volleyball.jpg", 11),
-	("galaxy_pool", "blendPair2_galaxy.jpg", "blendPair2_pool.jpg", 23),
 )
 
 
@@ -80,20 +79,38 @@ def step_mask(height: int, width: int, orientation: str = "vertical") -> np.ndar
 	return mask
 
 
-def irregular_mask(height: int, width: int, seed: int) -> np.ndarray:
-	"""Create a reproducible wavy, irregular region selecting image A."""
-	rng = np.random.default_rng(seed)
-	angles = np.linspace(0.0, 2.0 * np.pi, 160, endpoint=False)
-	phase = rng.uniform(0.0, 2.0 * np.pi, size=3)
-	radius = 1.0 + 0.12 * np.sin(3 * angles + phase[0])
-	radius += 0.07 * np.sin(7 * angles + phase[1])
-	points = np.column_stack((
-		width / 2 + 0.38 * width * radius * np.cos(angles),
-		height / 2 + 0.40 * height * radius * np.sin(angles + 0.06 * np.sin(5 * angles + phase[2])),
-	)).astype(np.int32)
-	mask = np.zeros((height, width), dtype=np.float32)
-	cv2.fillPoly(mask, [points], 1.0)
-	return mask
+def galaxy_silhouette_mask(image: np.ndarray) -> np.ndarray:
+	"""Segment the main bright galaxy mass into a filled binary silhouette."""
+	height, width = image.shape[:2]
+	gray_image = np.clip(gray(image), 0.0, 1.0)
+	gray_u8 = np.round(gray_image * 255).astype(np.uint8)
+	blur_sigma = max(1.0, min(height, width) * 0.012)
+	blurred = cv2.GaussianBlur(gray_u8, (0, 0), sigmaX=blur_sigma, sigmaY=blur_sigma)
+	_, thresholded = cv2.threshold(
+		blurred, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU
+	)
+
+	kernel_size = max(5, int(round(min(height, width) * 0.055)))
+	if kernel_size % 2 == 0:
+		kernel_size += 1
+	kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+	closed = cv2.morphologyEx(thresholded, cv2.MORPH_CLOSE, kernel, iterations=2)
+	component_count, labels, stats, _ = cv2.connectedComponentsWithStats(closed)
+	if component_count <= 1:
+		raise ValueError("Could not segment a foreground galaxy component")
+	largest_label = 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA]))
+	component = np.where(labels == largest_label, 255, 0).astype(np.uint8)
+	contours, _ = cv2.findContours(component, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	if not contours:
+		raise ValueError("Galaxy segmentation did not produce an external contour")
+	contour = max(contours, key=cv2.contourArea)
+	epsilon = max(1.0, 0.0015 * cv2.arcLength(contour, True))
+	contour = cv2.approxPolyDP(contour, epsilon, True)
+	mask = np.zeros((height, width), dtype=np.uint8)
+	cv2.fillPoly(mask, [contour], 1)
+	smoothing_sigma = max(1.0, min(height, width) * 0.004)
+	smoothed = cv2.GaussianBlur(mask, (0, 0), smoothing_sigma)
+	return (smoothed >= 0.5).astype(np.float32)
 
 
 def _image_laplacian(image: np.ndarray) -> list[np.ndarray]:
@@ -232,24 +249,33 @@ def main() -> None:
 	run_blend_pair(apple, orange, "oraple_horizontal", step_mask(h, w, "horizontal"),
 					mask_title="Horizontal soft mask (white = A)")
 
-	for label, image_a_name, image_b_name, seed in CUSTOM_PAIRS:
+	for label, image_a_name, image_b_name, _ in CUSTOM_PAIRS:
 		image_a = read_rgb(IMAGE_DIR / image_a_name)
 		image_b = read_rgb(IMAGE_DIR / image_b_name)
 		height, width = image_a.shape[:2]
-		if label == "tennis_volleyball":
-			mask = np.ones((height, width), dtype=np.float32)
-			center = (round(0.5 * width), round(0.5 * height))
-			radius = max(1, round(0.18 * min(height, width)))
-			cv2.circle(mask, center, radius, 0.0, thickness=-1)
-			mask_title = "Round volleyball region (black = B)"
-		else:
-			mask = irregular_mask(height, width, seed)
-			mask_title = "Irregular mask"
+		mask = np.ones((height, width), dtype=np.float32)
+		center = (round(0.5 * width), round(0.5 * height))
+		radius = max(1, round(0.18 * min(height, width)))
+		cv2.circle(mask, center, radius, 0.0, thickness=-1)
 		run_blend_pair(image_a, image_b, label, mask, favorite=True,
-					mask_title=mask_title)
+					mask_title="Round volleyball region (black = B)")
 		if label == "tennis_volleyball":
 			run_blend_pair(image_a, image_b, f"{label}_vertical", step_mask(height, width),
 						mask_title="Vertical soft mask (white = A)")
+
+	galaxy = read_rgb(IMAGE_DIR / "blendPair2_galaxy.jpg")
+	galaxy_mask = galaxy_silhouette_mask(galaxy)
+	mask_title = "Automatic binary galaxy silhouette (white = A)"
+	original_pool = read_rgb(IMAGE_DIR / "blendPair2_pool.jpg")
+	original_result = run_blend_pair(galaxy, original_pool, "galaxy_pool", galaxy_mask,
+								 favorite=True, mask_title=mask_title)
+	gradient_pool = read_rgb(IMAGE_DIR / "swimmingpool-gradientmap.png")
+	gradient_result = run_blend_pair(galaxy, gradient_pool, "galaxy_pool_gradient_map",
+									 galaxy_mask, favorite=True, mask_title=mask_title)
+	save_grid(BLEND_OUTPUT / "galaxy_pool_pool_comparison.png", [
+		("Original pool", original_result),
+		("Gradient-mapped pool", gradient_result),
+	], columns=2)
 
 	print("Part 2.3/2.4 results saved under:", OUTPUT_DIR)
 
