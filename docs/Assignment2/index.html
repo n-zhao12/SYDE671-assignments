@@ -42,14 +42,12 @@
         </section>
         <section class="report-section" id="takeaway">
             <p class="eyebrow">Main takeaway</p>
-            <h2>The right scale depends on the task.</h2>
-            <p>The most important lesson from these experiments is that image detail is not one thing. High frequencies
-                describe fine edges and texture; low frequencies describe broader structure and illumination. Sharpening
-                amplifies detail that remains, hybrid images give different frequency bands different identities, and
-                multiresolution blending joins each band over its own transition width.</p>
-            <p>Boundary conditions matter just as much as the filter formula. Cropping between two convolutions changes
-                the values available to the second filter; retaining the blurred halo made the two-stage and direct DoG
-                calculations agree even at the borders.</p>
+            <h2>Filters shape which image details matter.</h2>
+            <p>The most important thing I learned is that choosing a filter means choosing which spatial details to keep
+                or emphasize. Gaussian smoothing suppresses fine texture, derivatives reveal intensity changes, and
+                sharpening adds high-frequency detail back. Hybrid images and multiresolution blending extend the same
+                idea by assigning different roles to different frequency scales. The filter scale should match the
+                structures I want the viewer to notice.</p>
         </section>
         <section class="report-section references" id="references">
             <h2>References &amp; credits</h2>
