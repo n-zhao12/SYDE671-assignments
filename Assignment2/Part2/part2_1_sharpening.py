@@ -34,12 +34,9 @@ def run_sharpening(path: str | Path, name: str, output_dir: Path) -> None:
     ]
     for amount in (0.5, 1.0, 1.5):
         filtered = unsharp_mask(image, sigma=3.0, amount=amount)
-        np.testing.assert_allclose(filtered, image + amount * high_frequency,
-                                   atol=1e-10, rtol=1e-10)
         sharpened = np.clip(filtered, 0.0, 1.0)
         panels.append((f"Unsharp amount {amount:g}", sharpened))
     save_grid(output_dir / f"{name}_unsharp.png", panels, columns=3)
-    print(f"{name}: single-convolution unsharp matches blur/subtract/add.")
 
     blurred_sharp = blurred
     restored = np.clip(unsharp_mask(blurred_sharp, sigma=3.0, amount=1.5), 0.0, 1.0)

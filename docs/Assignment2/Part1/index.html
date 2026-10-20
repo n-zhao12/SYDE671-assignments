@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="SYDE 671 Assignment 2 Part 1: NumPy convolution, finite differences, DoG filters, and HSV gradient orientations.">
+    <title>Part 1: Filters &amp; Edges | SYDE 671 Assignment 2</title>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../report.css">
+</head>
+
+<body class="assignment-two">
+    <header class="site-header">
+        <nav class="nav" aria-label="Main navigation">
+            <a class="brand" href="../../index.html">SYDE 671 &middot; Portfolio</a>
+            <div class="nav-links"><a href="../index.html">Assignment 2</a><a href="./index.html"
+                    aria-current="page">Filters &amp; edges</a><a href="../Part2/index.html">Frequencies &amp;
+                    blending</a></div>
+        </nav>
+    </header>
+    <main class="container report">
+        <p class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="../index.html">Assignment 2</a> / Part 1
+        </p>
+        <header class="report-header">
+            <p class="eyebrow">Part 1 &middot; Fun with filters</p>
+            <h1>Filters &amp; edges</h1>
+            <p class="lead">Implement convolution, measure local intensity change, and separate meaningful boundaries
+                from fine texture and noise.</p>
+        </header>
+        <nav class="section-nav" aria-label="Part 1 sections"><a href="#convolution">1.1 Convolution</a><a
+                href="#finite-differences">1.2 Finite differences</a><a href="#dog">1.3 DoG</a><a
+                href="#orientation">HSV orientation</a></nav>
+
+        <section class="report-section" id="convolution">
+            <p class="eyebrow">1.1 &middot; From scratch</p>
+            <h2>Convolution with four loops, then two</h2>
+            <p>Both implementations use NumPy array operations, not a built-in convolution. I flip the kernel in both
+                axes, pad the image with zeros, and evaluate each output pixel. The four-loop version explicitly
+                accumulates every kernel coefficient. The two-loop version keeps the image-coordinate loops but replaces
+                the inner two loops with an elementwise product and <code>np.sum</code>.</p>
+            <p>The portrait is read as grayscale and resized to at most 512 pixels on its longest side. A normalized 9
+                &times; 9 box filter averages its neighborhood; <code>Dx = [[1, 0, -1]]</code> and its transpose reveal
+                intensity changes across the face, clothing, and background.</p>
+            <figure class="result">
+                <a href="./results/part1_1_selfie.png"><img src="./results/part1_1_selfie.png"
+                        alt="Grayscale portrait, 9 by 9 box-filtered portrait, and horizontal and vertical derivative responses."
+                        fetchpriority="high"></a>
+                <figcaption>The box filter softens fine detail. The derivative filters respond to changes rather than
+                    absolute brightness; their signed responses are rescaled for display.</figcaption>
+            </figure>
+            <h3>Zero padding and convolution, not correlation</h3>
+            <p>For an odd kernel, each side receives half the kernel width or height in zeros, so the output keeps the
+                input dimensions. The implementation also handles even kernels with asymmetric padding consistent with
+                SciPy's <code>mode="same"</code>. Setting <code>padding=False</code> gives the valid interior instead.
+                Zero padding can darken a box-filtered border and create strong artificial derivative responses where
+                the image meets the zero-valued exterior.</p>
+            <pre><code>kh, kw = kernel.shape
+pad_top, pad_left = kh // 2, kw // 2
+pad_bottom, pad_right = kh - 1 - pad_top, kw - 1 - pad_left
+padded = np.pad(image, ((pad_top, pad_bottom), (pad_left, pad_right)),
+                mode="constant", constant_values=0)
+flipped = kernel[::-1, ::-1]
+out_h = padded.shape[0] - kh + 1
+out_w = padded.shape[1] - kw + 1
+output = np.zeros((out_h, out_w), dtype=np.float64)</code></pre>
+            <details open>
+                <summary>Four-loop accumulation</summary>
+                <pre><code>for y in range(out_h):
+    for x in range(out_w):
+        total = 0.0
+        for ky in range(kh):
+            for kx in range(kw):
+                total += padded[y + ky, x + kx] * flipped[ky, kx]
+        output[y, x] = total</code></pre>
+            </details>
+            <details open>
+                <summary>Two-loop accumulation</summary>
+                <pre><code>for y in range(out_h):
+    for x in range(out_w):
+        patch = padded[y:y + kh, x:x + kw]
+        output[y, x] = np.sum(patch * flipped)</code></pre>
+            </details>
+            <h3>Correctness and runtime</h3>
+            <p>Both outputs pass <code>np.allclose</code> against
+                <code>scipy.signal.convolve2d(image, kernel, mode="same", boundary="fill", fillvalue=0)</code>. The
+                correctness case uses an asymmetric 2 &times; 3 kernel, so it checks kernel flipping and even-kernel
+                alignment rather than only the easier symmetric-box case.</p>
+            <div class="table-wrap">
+                <table>
+                    <caption>Single-run timings for a 9 &times; 9 box kernel (output shape: 128 &times; 96)
+                    </caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Timing</th>
+                            <th scope="col">Result (seconds)</th>
+                            <th scope="col">Main cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Four loops</td>
+                            <td>0.3870</td>
+                            <td>Python iteration over pixels and kernel entries</td>
+                        </tr>
+                        <tr>
+                            <td>Two loops</td>
+                            <td>0.0654</td>
+                            <td>Python iteration over pixels; NumPy kernel reduction</td>
+                        </tr>
+                        <tr>
+                            <td>SciPy</td>
+                            <td>0.0020</td>
+                            <td>Compiled convolution implementation</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>The two-loop implementation is faster, but it still pays Python overhead at every pixel. SciPy is much
+                faster on this example. These are illustrative measurements from one local run, not averaged benchmarks;
+                all three implementations use the same image, kernel, and zero-fill convention.</p>
+        </section>
+
+        <section class="report-section" id="finite-differences">
+            <p class="eyebrow">1.2 &middot; Finite difference operator</p>
+            <h2>From intensity changes to an edge map</h2>
+            <p>I convolve the cameraman image with the centered finite-difference filters <code>Dx = [[1, 0, -1]]</code>
+                and <code>Dy = Dx.T</code>. The horizontal derivative is strong at vertical boundaries; the vertical
+                derivative is strong at horizontal boundaries. Combining them makes the response independent of edge
+                direction.</p>
+            <div class="equation"><var>g</var><sub>x</sub> = <var>I</var> &lowast; <var>D</var><sub>x</sub>, &nbsp;
+                <var>g</var><sub>y</sub> = <var>I</var> &lowast; <var>D</var><sub>y</sub>, &nbsp; <var>M</var> =
+                &radic;(<var>g</var><sub>x</sub><sup>2</sup> + <var>g</var><sub>y</sub><sup>2</sup>)</div>
+            <figure class="result">
+                <a href="./results/part1_2_finite_difference.png"><img src="./results/part1_2_finite_difference.png"
+                        alt="Cameraman input, Dx and Dy responses, gradient magnitude, and thresholded binary edges."
+                        loading="lazy"></a>
+                <figcaption>The silhouette, camera, and major scene boundaries are strong, but texture in the grass also
+                    creates responses. The bright outer frame is a zero-padding artifact, not a scene boundary.
+                </figcaption>
+            </figure>
+            <h3>Threshold choice</h3>
+            <p>The displayed edge map uses the 85th percentile of the unnormalized magnitude as its threshold:
+                <code>edges = magnitude &gt;= np.percentile(magnitude, 85)</code>. This keeps roughly the strongest 15%
+                of responses, subject to ties. It is a compromise: the person's silhouette and camera remain visible,
+                while many weaker variations are suppressed. Some grass texture remains, and weak or broken boundaries
+                are lost. A lower threshold retains more detail but also more clutter; a higher threshold cleans the map
+                at the cost of continuity.</p>
+        </section>
+
+        <section class="report-section" id="dog">
+            <p class="eyebrow">1.3 &middot; Derivative of Gaussian</p>
+            <h2>Smooth first, then differentiate</h2>
+            <p>A derivative also responds to small fluctuations, so I first smooth with a 9 &times; 9 Gaussian of
+                standard deviation 1.5 pixels. I construct the Gaussian from <code>cv2.getGaussianKernel</code> and the
+                outer product of its one-dimensional weights, then convolve it with each finite-difference filter to
+                obtain a DoG kernel.</p>
+            <figure class="result">
+                <a href="./results/part1_3_gaussian_dog_kernels.png"><img
+                        src="./results/part1_3_gaussian_dog_kernels.png"
+                        alt="Normalized Gaussian kernel and signed derivative-of-Gaussian filters in x and y."
+                        loading="lazy"></a>
+                <figcaption>The Gaussian is positive and centered. Each derivative kernel has positive and negative
+                    lobes, measuring change over a smoothed neighborhood. Kernel images are independently rescaled to
+                    make their shapes visible.</figcaption>
+            </figure>
+            <figure class="result">
+                <a href="./results/part1_3_dog_results.png"><img src="./results/part1_3_dog_results.png"
+                        alt="Cameraman, Gaussian-smoothed input, smoothed Dx and Dy, gradient magnitude, and smoothed binary edges."
+                        loading="lazy"></a>
+                <figcaption>Smoothing reduces fine texture and makes the dominant boundaries broader and more coherent.
+                    Small detail is intentionally lost.</figcaption>
+            </figure>
+            <p>Compared with unsmoothed finite differences, the DoG response is less sensitive to tiny grass and
+                background variations, but edge localization becomes less sharp. Each displayed binary map uses its own
+                85th-percentile threshold; these are not comparisons at one fixed numeric threshold. The magnitude
+                images and boundary shapes show the smoothing effect independently of that choice.</p>
+            <h3>One convolution versus two</h3>
+            <div class="equation">(<var>I</var> &lowast; <var>G</var>) &lowast; <var>D</var><sub>x</sub> = <var>I</var>
+                &lowast; (<var>G</var> &lowast; <var>D</var><sub>x</sub>)</div>
+            <p>This associativity identity only produces matching finite-image results when boundary handling is
+                consistent. Cropping the intermediate blur to the original image size discards values needed by the
+                second convolution near the frame. I retain the full blurred halo, differentiate it, and only then crop
+                to the original size.</p>
+            <figure class="result">
+                <a href="./results/part1_3_dog_direct_comparison.png"><img
+                        src="./results/part1_3_dog_direct_comparison.png"
+                        alt="Two-stage smoothing and differentiation compared with direct DoG convolution, showing matching x, y, and magnitude responses."
+                        loading="lazy"></a>
+                <figcaption>The direct DoG and two-stage results agree across the full image, including the frame. The
+                    strong frame response is shared because both calculations use the same zero extension.</figcaption>
+            </figure>
+            <p>The two methods produce visually indistinguishable x, y, and magnitude responses, including at the
+                image borders.</p>
+        </section>
+
+        <section class="report-section" id="orientation">
+            <p class="eyebrow">Bells &amp; Whistle</p>
+            <h2>Direction as hue, strength as brightness</h2>
+            <p>I compute orientations without calling a built-in angle function. For each gradient, the ratio of the
+                smaller absolute component to the larger is in [0, 1]. Half-angle range reduction makes the
+                inverse-tangent series converge quickly; 16 terms recover the acute angle. Component ordering, signs,
+                and quadrant corrections then place it in [0, 2&pi;). A zero gradient is assigned angle zero but
+                displayed black because its magnitude is zero.</p>
+            <div class="equation"><var>t</var> = <var>r</var> / (1 + &radic;(1 + <var>r</var><sup>2</sup>)), &nbsp;
+                <var>&theta;</var><sub>acute</sub> &asymp; 2(<var>t</var> &minus; <var>t</var><sup>3</sup>/3 +
+                <var>t</var><sup>5</sup>/5 &minus; &hellip;)</div>
+            <p>HSV hue encodes the angle, saturation is one, and value is gradient magnitude divided by the maximum
+                magnitude. Converting HSV to RGB makes edges with similar orientations share a hue while weak texture
+                stays dim. Hue measures the directed intensity gradient, so reversing contrast shifts the hue by half a
+                cycle. Since image y increases downward, the angle convention follows image coordinates.</p>
+            <figure class="result portrait">
+                <a href="./results/part1_bells_gradient_orientation.png"><img
+                        src="./results/part1_bells_gradient_orientation.png"
+                        alt="Cameraman gradient orientation visualized using cyclic hue, with strong edges bright and weak gradients dark."
+                        loading="lazy"></a>
+                <figcaption>The silhouette and camera boundaries separate into different hues according to gradient
+                    direction. Brightness prevents unreliable directions in nearly flat areas from dominating the
+                    visualization.</figcaption>
+            </figure>
+        </section>
+        <p class="source-link"><a href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment2/Part1">Part 1 source files</a></p>
+    </main>
+    <footer class="site-footer">
+        <div class="container"><a href="../index.html">&larr; Assignment 2 overview</a><a
+                href="../Part2/index.html">Part 2: frequencies &amp; blending &rarr;</a></div>
+    </footer>
+</body>
+
+</html>

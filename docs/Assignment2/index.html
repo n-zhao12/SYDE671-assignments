@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="SYDE 671 Assignment 2: convolution, image gradients, sharpening, hybrid images, and multiresolution blending.">
+    <title>Assignment 2: Filters &amp; Frequencies | SYDE 671</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="./report.css">
+</head>
+
+<body class="assignment-two">
+    <header class="site-header">
+        <nav class="nav" aria-label="Main navigation">
+            <a class="brand" href="../index.html">SYDE 671 &middot; Portfolio</a>
+            <div class="nav-links"><a href="./index.html" aria-current="page">Assignment 2</a><a
+                    href="./Part1/index.html">Filters &amp; edges</a><a href="./Part2/index.html">Frequencies &amp;
+                    blending</a></div>
+        </nav>
+    </header>
+    <main class="container report">
+        <p class="breadcrumbs"><a href="../index.html">Home</a> / Assignment 2</p>
+        <header class="report-header">
+            <p class="eyebrow">Assignment 2</p>
+            <h1>Fun with Filters and Frequencies!</h1>
+            <p class="lead">From detecting an edge to joining two worlds: experiments in convolution, image detail, and
+                scale-dependent perception.</p>
+        </header>
+        <section class="part-links" aria-label="Assignment sections">
+            <a href="./Part1/index.html"><span class="eyebrow">Part 1</span>
+                <h2>Filters &amp; edges</h2>
+                <p>Convolution from scratch, finite differences, derivative-of-Gaussian filters, and gradient
+                    orientations.</p><span class="text-link">Read Part 1 &rarr;</span>
+            </a>
+            <a href="./Part2/index.html"><span class="eyebrow">Part 2</span>
+                <h2>Frequencies &amp; blending</h2>
+                <p>Single-convolution sharpening, three hybrid images, Gaussian and Laplacian stacks, and creative image
+                    blends.</p><span class="text-link">Read Part 2 &rarr;</span>
+            </a>
+        </section>
+        <section class="report-section" id="takeaway">
+            <p class="eyebrow">Main takeaway</p>
+            <h2>The right scale depends on the task.</h2>
+            <p>The most important lesson from these experiments is that image detail is not one thing. High frequencies
+                describe fine edges and texture; low frequencies describe broader structure and illumination. Sharpening
+                amplifies detail that remains, hybrid images give different frequency bands different identities, and
+                multiresolution blending joins each band over its own transition width.</p>
+            <p>Boundary conditions matter just as much as the filter formula. Cropping between two convolutions changes
+                the values available to the second filter; retaining the blurred halo made the two-stage and direct DoG
+                calculations agree even at the borders.</p>
+        </section>
+        <section class="report-section references" id="references">
+            <h2>References &amp; credits</h2>
+            <ul>
+                <li>SYDE 671 Assignment 2, adapted from Berkeley CS180 and Derek Hoiem's computational photography
+                    exercises.</li>
+                <li>Burt and Adelson (1983), <cite>A Multiresolution Spline with Application to Image Mosaics</cite>,
+                    especially the mask-based blending procedure and Figure 10.</li>
+                <li>Szeliski, <cite>Computer Vision: Algorithms and Applications</cite>, second edition, Figure 3.42.
+                </li>
+                <li>Oliva, Torralba, and Schyns (2006), <cite>Hybrid Images</cite>.</li>
+                <li>Cameraman, Taj Mahal, Derek/Nutmeg, and apple/orange examples were supplied with the assignment.
+                </li>
+            </ul>
+            <h3>Image sources</h3>
+            <ul>
+                <li>Sharpening image: <a
+                        href="https://petapixel.com/2018/10/12/where-to-focus-in-landscape-photos-and-how-to-shoot-sharper-shots/">PetaPixel,
+                        Where to Focus in Landscape Photos and How to Shoot Sharper Shots</a>.</li>
+                <li>Hybrid pair 1, Harry and Voldemort: <a
+                        href="https://github.com/Mohammadjafari80/Hybrid-Images/tree/main/images">Mohammadjafari80,
+                        Hybrid-Images image collection on GitHub</a>.</li>
+                <li>Hybrid pair 2, tiger and lion: <a
+                        href="https://www.kaggle.com/datasets/aashanvitjanbandhu/hybrid-images">Hybrid Images dataset
+                        on Kaggle</a>.</li>
+                <li>Blend pair, galaxy: <a href="https://esahubble.org/images/heic0512d/">ESA/Hubble
+                        image heic0512d</a>.</li>
+                <li>Blend pair, pool: <a href="https://pixabay.com/images/search/pool/">Pixabay pool
+                        image search</a>.</li>
+                <li>Blend pair, volleyball and tennis ball: <a
+                        href="https://www.kaggle.com/datasets/aashanvitjanbandhu/hybrid-images">Hybrid Images dataset
+                        on Kaggle</a>.</li>
+            </ul>
+            <p><a href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment2">Assignment 2 source
+                    code</a></p>
+        </section>
+    </main>
+    <footer class="site-footer">
+        <div class="container"><a href="../index.html">&larr; Course portfolio</a><a href="./Part1/index.html">Part 1:
+                filters &amp; edges &rarr;</a></div>
+    </footer>
+</body>
+
+</html>

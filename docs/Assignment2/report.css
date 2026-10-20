@@ -1,0 +1,232 @@
+.assignment-two {
+    letter-spacing: 0;
+}
+
+.assignment-two h1,
+.assignment-two h2 {
+    font-family: inherit;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+
+.assignment-two h1 {
+    max-width: 780px;
+    margin: 0;
+    font-size: 3.2rem;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
+
+.assignment-two h2 {
+    margin: 0 0 6px;
+    font-size: 1.75rem;
+    line-height: 1.25;
+}
+
+.assignment-two h3 {
+    margin: 26px 0 10px;
+    font-size: 1.15rem;
+}
+
+.assignment-two .eyebrow {
+    letter-spacing: 0;
+    color: var(--muted);
+}
+
+.report-header {
+    padding: 32px;
+    border: 1px solid var(--line);
+    background: var(--soft);
+}
+
+.report-header .lead {
+    max-width: 700px;
+    color: var(--muted);
+    font-size: 1rem;
+}
+
+.section-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+    padding: 16px 0;
+    margin: 6px 0 32px;
+    border-block: 1px solid var(--line);
+}
+
+.section-nav a,
+.assignment-two .text-link {
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.report-section {
+    margin-top: 38px;
+    scroll-margin-top: 24px;
+}
+
+.report-section>p,
+.report-section>ul {
+    max-width: 850px;
+}
+
+.result {
+    min-width: 0;
+    margin: 24px 0 32px;
+}
+
+.result img {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #fff;
+}
+
+.result figcaption {
+    padding: 10px 0;
+    max-width: 920px;
+    color: var(--muted);
+    font-size: .9rem;
+    line-height: 1.55;
+}
+
+.result.portrait {
+    max-width: 650px;
+    margin-inline: auto;
+}
+
+.overview-result {
+    max-width: 850px;
+}
+
+.part-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 38px;
+}
+
+.part-links>a {
+    padding: 20px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: inherit;
+    text-decoration: none;
+}
+
+.part-links>a:hover {
+    border-color: #8998a3;
+    background: #fafcfd;
+}
+
+.part-links h2 {
+    color: var(--accent);
+    font-size: 1.5rem;
+    margin: 8px 0;
+}
+
+.part-links p {
+    color: var(--muted);
+}
+
+.equation {
+    padding: 14px 18px;
+    border-left: 3px solid var(--accent);
+    background: var(--soft);
+    overflow-x: auto;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.assignment-two pre {
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 20px;
+    border: 1px solid var(--line);
+    background: var(--soft);
+    font-size: .85rem;
+    line-height: 1.6;
+    tab-size: 4;
+}
+
+.assignment-two code {
+    font-family: Consolas, "Liberation Mono", monospace;
+    overflow-wrap: anywhere;
+}
+
+.assignment-two pre code {
+    overflow-wrap: normal;
+}
+
+.assignment-two details {
+    margin: 20px 0;
+    border-block: 1px solid var(--line);
+    padding: 14px 0;
+}
+
+.assignment-two summary {
+    cursor: pointer;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.assignment-two .table-wrap {
+    margin: 24px 0;
+}
+
+.assignment-two a:focus-visible,
+.assignment-two summary:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
+}
+
+.assignment-two .site-footer .container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.references {
+    font-size: .94rem;
+}
+
+@media (max-width: 600px) {
+    .report-header {
+        padding: 22px;
+    }
+
+    .assignment-two h1 {
+        font-size: 2rem;
+    }
+
+    .assignment-two h2 {
+        font-size: 1.75rem;
+    }
+
+    .part-links {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .section-nav {
+        gap: 10px 18px;
+    }
+}
+
+@media print {
+
+    .assignment-two .site-header,
+    .assignment-two .section-nav,
+    .assignment-two .site-footer {
+        display: none;
+    }
+
+    .assignment-two .report {
+        width: 100%;
+    }
+
+    .assignment-two figure {
+        break-inside: avoid;
+    }
+}
