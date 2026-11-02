@@ -132,9 +132,9 @@
                 image using Euclidean distance. I accept the nearest match when its distance is less than 0.8 times the
                 second-nearest distance, then keep one-to-one feature assignments. The overlays below show accepted
                 candidates before geometric outlier rejection; their matching colors identify paired points. Figure 6b
-                    of <a href="https://cal-cs180.github.io/fa25/hw/proj3/Papers/MOPS.pdf">Brown et al.</a> shows correct
-                    matches concentrated at lower nearest/second-nearest ratios than incorrect matches. I use 0.8 as a
-                    permissive cutoff to retain candidates; RANSAC then rejects matches that do not agree geometrically.</p>
+                of <a href="https://cal-cs180.github.io/fa25/hw/proj3/Papers/MOPS.pdf">Brown et al.</a> shows correct
+                matches concentrated at lower nearest/second-nearest ratios than incorrect matches. I use 0.8 as a
+                permissive cutoff to retain candidates; RANSAC then rejects matches that do not agree geometrically.</p>
             <div class="equation" role="math"
                 aria-label="Accept a match when the nearest descriptor distance divided by the second-nearest descriptor distance is below 0.8">
                 r = d<sub>1</sub> / d<sub>2</sub> &lt; 0.8

@@ -54,10 +54,10 @@ def _save_keypoint_view(
 	_save_image(path, view)
 
 
-def _save_descriptor_grid(patches: np.ndarray, path: Path, limit: int = 25) -> None:
-	if len(patches) == 0:
+def _save_descriptor_grid(descriptors: np.ndarray, path: Path, limit: int = 25) -> None:
+	if len(descriptors) == 0:
 		return
-	selected = patches[:limit]
+	selected = descriptors[:limit].reshape(-1, 8, 8)
 	tile_size = 96
 	label_height = 22
 	columns = min(5, len(selected))
@@ -66,10 +66,11 @@ def _save_descriptor_grid(patches: np.ndarray, path: Path, limit: int = 25) -> N
 	for index, patch in enumerate(selected):
 		row, column = divmod(index, columns)
 		x, y = column * tile_size, row * (tile_size + label_height)
-		patch_u8 = np.clip(patch * 255.0, 0, 255).astype(np.uint8)
+		patch_u8 = np.clip(0.5 + patch / 6.0, 0.0, 1.0)
+		patch_u8 = np.rint(patch_u8 * 255.0).astype(np.uint8)
 		tile = cv2.resize(patch_u8, (tile_size, tile_size), interpolation=cv2.INTER_NEAREST)
 		canvas[y:y + tile_size, x:x + tile_size] = cv2.cvtColor(tile, cv2.COLOR_GRAY2BGR)
-		cv2.putText(canvas, f"descriptor {index + 1}", (x + 3, y + tile_size + 16), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (255, 255, 255), 1)
+		cv2.putText(canvas, f"normalized {index + 1}", (x + 3, y + tile_size + 16), cv2.FONT_HERSHEY_SIMPLEX, 0.38, (255, 255, 255), 1)
 	_save_image(path, canvas)
 
 
@@ -193,7 +194,7 @@ def run_set(
 		stem = f"image{index:02}"
 		_save_keypoint_view(image, result["corners_xy"], feature_dir / f"{stem}_harris.png", (0, 255, 255))
 		_save_keypoint_view(image, result["anms_xy"], feature_dir / f"{stem}_anms.png", (0, 255, 0))
-		_save_descriptor_grid(result["patches"], feature_dir / f"{stem}_descriptors.png")
+		_save_descriptor_grid(result["descriptors"], feature_dir / f"{stem}_descriptors.png")
 		np.savez_compressed(
 			feature_dir / f"{stem}_features.npz",
 			corners_xy=result["corners_xy"],
