@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="Assignment 3 Part 1: manual homography estimation, inverse image warping, rectification, and feather-blended mosaics.">
+    <title>Part 1: Manual Mosaics | SYDE 671 Assignment 3</title>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../report.css">
+</head>
+
+<body class="assignment-three">
+    <header class="site-header">
+        <nav class="nav" aria-label="Main navigation">
+            <a class="brand" href="../../index.html">SYDE 671 &middot; Portfolio</a>
+            <div class="nav-links"><a href="../index.html">Assignment 3</a><a href="./index.html"
+                    aria-current="page">Manual mosaics</a><a href="../Part2/index.html">Auto stitching</a></div>
+        </nav>
+    </header>
+    <main class="container report">
+        <p class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="../index.html">Assignment 3</a> /
+            Part 1</p>
+        <header class="report-header">
+            <p class="eyebrow">Part 1 &middot; Manual correspondences</p>
+            <h1>Image warping &amp; mosaicing</h1>
+            <p class="lead">Clicked correspondences define projective transforms. Inverse warping resamples each
+                photograph, and spatial feather weights soften the overlap between views.</p>
+        </header>
+        <nav class="section-nav" aria-label="Part 1 sections"><a href="#capture">A.1 Photo sets</a><a
+                href="#homographies">A.2 Homographies</a><a href="#rectification">A.3 Rectification</a><a
+                href="#mosaics">A.4 Mosaics</a></nav>
+
+        <section class="report-section" id="capture">
+            <p class="eyebrow">A.1 &middot; Source photographs</p>
+            <h2>Three overlapping image sequences</h2>
+            <p>I captured all three multi-view sets in quick succession while rotating the camera around an
+                approximately fixed center of projection, with substantial overlap between neighboring views. Nearby
+                objects, residual camera translation, and scene motion can still violate the projective model and
+                create parallax or ghosting.</p>
+            <div class="gallery">
+                <figure><a href="../results/part1_set1_sources.jpg"><img src="../results/part1_set1_sources.jpg"
+                            alt="Three source photos from Set 1" fetchpriority="high"></a>
+                    <figcaption>Set 1 &middot; three source views</figcaption>
+                </figure>
+                <figure><a href="../results/part1_set2_sources.jpg"><img src="../results/part1_set2_sources.jpg"
+                            alt="Two source photos from Set 2" loading="lazy"></a>
+                    <figcaption>Set 2 &middot; two source views</figcaption>
+                </figure>
+                <figure><a href="../results/part1_set3_sources.jpg"><img src="../results/part1_set3_sources.jpg"
+                            alt="Two source photos from Set 3" loading="lazy"></a>
+                    <figcaption>Set 3 &middot; two source views</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="report-section" id="homographies">
+            <p class="eyebrow">A.2 &middot; Least-squares estimation</p>
+            <h2>Recovering a homography from clicked points</h2>
+            <p>For each neighboring pair, I click corresponding scene points in the moving and reference images. In
+                homogeneous coordinates, each correspondence satisfies
+                <var>p</var><sub>i</sub><sup>&prime;</sup> &prop; <var>H</var><var>p</var><sub>i</sub>. Four point
+                pairs determine the eight free parameters, but I use more matches and solve an overdetermined system by
+                least squares. Point coordinates are normalized before solving for better numerical conditioning, then
+                the homography is denormalized.
+            </p>
+            <div class="matrix-system" role="math"
+                aria-label="For each normalized point pair, the two rows of the 2 by 8 coefficient matrix multiply the eight homography parameters to equal u and v">
+                <p class="matrix-system-title">For one normalized point pair (x<sub>i</sub>, y<sub>i</sub>) &rarr;
+                    (u<sub>i</sub>, v<sub>i</sub>)</p>
+                <div class="matrix-equation">
+                    <span class="matrix-name">A<sub>i</sub> =</span>
+                    <div class="matrix-bracket" aria-hidden="true">
+                        <div class="matrix-rows">
+                            <span>x<sub>i</sub></span><span>y<sub>i</sub></span><span>1</span><span>0</span><span>0</span><span>0</span><span>&minus;u<sub>i</sub>x<sub>i</sub></span><span>&minus;u<sub>i</sub>y<sub>i</sub></span>
+                            <span>0</span><span>0</span><span>0</span><span>x<sub>i</sub></span><span>y<sub>i</sub></span><span>1</span><span>&minus;v<sub>i</sub>x<sub>i</sub></span><span>&minus;v<sub>i</sub>y<sub>i</sub></span>
+                        </div>
+                    </div>
+                    <span class="matrix-operator">&times;</span>
+                    <div class="matrix-bracket vector-bracket" aria-hidden="true">
+                        <div class="vector-rows">
+                            <span>h<sub>11</sub></span><span>h<sub>12</sub></span><span>h<sub>13</sub></span><span>h<sub>21</sub></span><span>h<sub>22</sub></span><span>h<sub>23</sub></span><span>h<sub>31</sub></span><span>h<sub>32</sub></span>
+                        </div>
+                    </div>
+                    <span class="matrix-operator">=</span>
+                    <div class="matrix-bracket vector-bracket" aria-hidden="true">
+                        <div class="vector-rows"><span>u<sub>i</sub></span><span>v<sub>i</sub></span></div>
+                    </div>
+                </div>
+                <p class="matrix-system-caption">Stacking the rows for all point pairs gives A h = b. We fix
+                    h<sub>33</sub> = 1,
+                    solve the overdetermined system by least squares, then denormalize:</p>
+                <div class="equation matrix-denormalization">
+                    H = T<sub>destination</sub><sup>&minus;1</sup> H<sub>normalized</sub> T<sub>source</sub>
+                </div>
+            </div>
+            <div class="gallery">
+                <figure><a href="../results/part1_set1_matches.jpg"><img src="../results/part1_set1_matches.jpg"
+                            alt="Manually clicked correspondences from Set 1 image 1 to image 2" loading="lazy"></a>
+                    <figcaption>Set 1 &middot; image 1 &rarr; image 2</figcaption>
+                </figure>
+                <figure><a href="../results/part1_set1_pair02_matches.jpg"><img
+                            src="../results/part1_set1_pair02_matches.jpg"
+                            alt="Manually clicked correspondences from Set 1 image 2 to image 3" loading="lazy"></a>
+                    <figcaption>Set 1 &middot; image 2 &rarr; image 3</figcaption>
+                </figure>
+                <figure><a href="../results/part1_set2_matches.jpg"><img src="../results/part1_set2_matches.jpg"
+                            alt="Clicked correspondence pairs between Set 2 images" loading="lazy"></a>
+                    <figcaption>Set 2 &middot; manually clicked correspondences</figcaption>
+                </figure>
+                <figure><a href="../results/part1_set3_matches.jpg"><img src="../results/part1_set3_matches.jpg"
+                            alt="Clicked correspondence pairs between Set 3 images" loading="lazy"></a>
+                    <figcaption>Set 3 &middot; manually clicked correspondences</figcaption>
+                </figure>
+            </div>
+            <details class="numeric-example" open>
+                <summary>Numerical example &middot; Set 1, pair 1</summary>
+                <p>The full normalized system contains 20 rows from 10 clicked point pairs. <var>h</var> is ordered
+                    as [h<sub>11</sub>, h<sub>12</sub>, h<sub>13</sub>,
+                    h<sub>21</sub>, h<sub>22</sub>, h<sub>23</sub>, h<sub>31</sub>, h<sub>32</sub>]<sup>T</sup>,
+                    with h<sub>33</sub> = 1.</p>
+                <div class="numeric-system-scroll">
+                    <table class="numeric-system-table">
+                        <caption>All 10 correspondence pairs &middot; normalized A h = b (20 equations)</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Equation</th>
+                                <th scope="col">h<sub>11</sub></th>
+                                <th scope="col">h<sub>12</sub></th>
+                                <th scope="col">h<sub>13</sub></th>
+                                <th scope="col">h<sub>21</sub></th>
+                                <th scope="col">h<sub>22</sub></th>
+                                <th scope="col">h<sub>23</sub></th>
+                                <th scope="col">h<sub>31</sub></th>
+                                <th scope="col">h<sub>32</sub></th>
+                                <th scope="col">b</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th scope="row">u<sub>1</sub></th>
+                                <td>-1.263647</td>
+                                <td>-1.113525</td>
+                                <td>1.000000</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>-1.599081</td>
+                                <td>-1.409109</td>
+                                <td>-1.265449</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">v<sub>1</sub></th>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>-1.263647</td>
+                                <td>-1.113525</td>
+                                <td>1.000000</td>
+                                <td>-1.388193</td>
+                                <td>-1.223275</td>
+                                <td>-1.098561</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">u<sub>2</sub></th>
+                                <td>-0.083077</td>
+                                <td>-2.075471</td>
+                                <td>1.000000</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>-0.007475</td>
+                                <td>-0.186740</td>
+                                <td>-0.089975</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">v<sub>2</sub></th>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>0</td>
+                                <td>-0.083077</td>
+                                <td>-2.075471</td>
+                                <td>1.000000</td>
+                                <td>-0.173247</td>
+                                <td>-4.328143</td>
+                                <td>-2.085379</td>
+                            </tr>
+                            <tr><th scope="row">u<sub>3</sub></th><td>0.645670</td><td>0.154494</td><td>1.000000</td><td>0</td><td>0</td><td>0</td><td>-0.419775</td><td>-0.100443</td><td>0.650139</td></tr>
+                            <tr><th scope="row">v<sub>3</sub></th><td>0</td><td>0</td><td>0</td><td>0.645670</td><td>0.154494</td><td>1.000000</td><td>-0.096511</td><td>-0.023093</td><td>0.149474</td></tr>
+                            <tr><th scope="row">u<sub>4</sub></th><td>1.913689</td><td>0.781217</td><td>1.000000</td><td>0</td><td>0</td><td>0</td><td>-3.660286</td><td>-1.494222</td><td>1.912686</td></tr>
+                            <tr><th scope="row">v<sub>4</sub></th><td>0</td><td>0</td><td>0</td><td>1.913689</td><td>0.781217</td><td>1.000000</td><td>-1.424679</td><td>-0.581590</td><td>0.744467</td></tr>
+                            <tr><th scope="row">u<sub>5</sub></th><td>0.631095</td><td>0.810367</td><td>1.000000</td><td>0</td><td>0</td><td>0</td><td>-0.410299</td><td>-0.526851</td><td>0.650139</td></tr>
+                            <tr><th scope="row">v<sub>5</sub></th><td>0</td><td>0</td><td>0</td><td>0.631095</td><td>0.810367</td><td>1.000000</td><td>-0.497305</td><td>-0.638571</td><td>0.788003</td></tr>
+                            <tr><th scope="row">u<sub>6</sub></th><td>-0.928424</td><td>0.824941</td><td>1.000000</td><td>0</td><td>0</td><td>0</td><td>-0.851513</td><td>0.756604</td><td>-0.917160</td></tr>
+                            <tr><th scope="row">v<sub>6</sub></th><td>0</td><td>0</td><td>0</td><td>-0.928424</td><td>0.824941</td><td>1.000000</td><td>0.772021</td><td>-0.685971</td><td>0.831539</td></tr>
+                            <tr><th scope="row">u<sub>7</sub></th><td>-1.307372</td><td>0.139919</td><td>1.000000</td><td>0</td><td>0</td><td>0</td><td>-1.711330</td><td>0.183152</td><td>-1.308985</td></tr>
+                            <tr><th scope="row">v<sub>7</sub></th><td>0</td><td>0</td><td>0</td><td>-1.307372</td><td>0.139919</td><td>1.000000</td><td>0.214391</td><td>-0.022945</td><td>0.163986</td></tr>
+                            <tr><th scope="row">u<sub>8</sub></th><td>-0.083077</td><td>0.154494</td><td>1.000000</td><td>0</td><td>0</td><td>0</td><td>-0.007475</td><td>0.013901</td><td>-0.089975</td></tr>
+                            <tr><th scope="row">v<sub>8</sub></th><td>0</td><td>0</td><td>0</td><td>-0.083077</td><td>0.154494</td><td>1.000000</td><td>0.012418</td><td>-0.023093</td><td>0.149474</td></tr>
+                            <tr><th scope="row">u<sub>9</sub></th><td>-1.700895</td><td>0.154494</td><td>1.000000</td><td>0</td><td>0</td><td>0</td><td>-2.917583</td><td>0.265008</td><td>-1.715322</td></tr>
+                            <tr><th scope="row">v<sub>9</sub></th><td>0</td><td>0</td><td>0</td><td>-1.700895</td><td>0.154494</td><td>1.000000</td><td>0.328290</td><td>-0.029819</td><td>0.193010</td></tr>
+                            <tr><th scope="row">u<sub>10</sub></th><td>2.176038</td><td>0.169069</td><td>1.000000</td><td>0</td><td>0</td><td>0</td><td>-4.730494</td><td>-0.367540</td><td>2.173902</td></tr>
+                            <tr><th scope="row">v<sub>10</sub></th><td>0</td><td>0</td><td>0</td><td>2.176038</td><td>0.169069</td><td>1.000000</td><td>-0.356840</td><td>-0.027725</td><td>0.163986</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <h4>Recovered denormalized homography</h4>
+                <pre class="homography-matrix"><code>H = [ 1.073469   0.020217  -1673.738979]
+    [ 0.007044   1.090269     57.009333]
+    [ 0.000009   0.000016      1.000000]</code></pre>
+            </details>
+        </section>
+
+        <section class="report-section" id="rectification">
+            <p class="eyebrow">A.3 &middot; Inverse warping</p>
+            <h2>Rectifying a planar sign panel</h2>
+            <p>I click the four outer corners of the same flat sign panel in each photograph and map them to an
+                800 &times; 320 output rectangle. For every destination pixel, inverse warping applies
+                <var>H</var><sup>-1</sup> to find its source coordinate, avoiding the holes produced by forward
+                splatting. The nearest-neighbor method rounds to one source pixel; bilinear interpolation takes a
+                weighted average of the four surrounding pixels.
+            </p>
+            <div class="equation" role="math"
+                aria-label="Source coordinate is proportional to the inverse homography applied to the destination coordinate">
+                <var>x</var><sub>source</sub> &prop; <var>H</var><sup>&minus;1</sup><var>x</var><sub>destination</sub>
+            </div>
+            <div class="gallery">
+                <figure><a href="../results/part1_rect_set3_1.jpg"><img src="../results/part1_rect_set3_1.jpg"
+                            alt="Nearest-neighbor and bilinear rectification comparison for the first sign photo"
+                            loading="lazy"></a>
+                    <figcaption>Rectification 1 &middot; nearest neighbor and bilinear</figcaption>
+                </figure>
+                <figure><a href="../results/part1_rect_set3_2.jpg"><img src="../results/part1_rect_set3_2.jpg"
+                            alt="Nearest-neighbor and bilinear rectification comparison for the second sign photo"
+                            loading="lazy"></a>
+                    <figcaption>Rectification 2 &middot; nearest neighbor and bilinear</figcaption>
+                </figure>
+            </div>
+            <p>Nearest neighbor is faster in these single-run measurements, while bilinear interpolation produces
+                smoother edges and less pixelation. On image 1 the measured times were 0.075 s and 0.202 s; on image 2,
+                0.033 s and 0.101 s, respectively. These timings depend on the machine and run conditions. The
+                comparisons use the same 800 &times; 320 target size.</p>
+        </section>
+
+        <section class="report-section" id="mosaics">
+            <p class="eyebrow">A.4 &middot; Feather blending</p>
+            <h2>Three manually registered mosaics</h2>
+            <p>Each image is mapped into a shared panorama coordinate system. A per-pixel feather weight increases with
+                distance from the source image border. I warp both the image and its weight map, accumulate weighted
+                pixel values, then divide by the accumulated weights:</p>
+            <div class="equation equation-average" role="math"
+                aria-label="Mosaic pixel is the weighted sum of warped image pixels divided by the sum of their weights, where the weight sum is positive">
+                <var>M</var>(x,y) =
+                <span class="fraction">
+                    <span>&sum;<sub>i=1</sub><sup>N</sup> w<sub>i</sub>(x,y)
+                        <var>I</var><sub>i</sub><sup>warped</sup>(x,y)</span>
+                    <span>&sum;<sub>i=1</sub><sup>N</sup> w<sub>i</sub>(x,y)</span>
+                </span>
+                &nbsp; when &sum;<sub>i=1</sub><sup>N</sup> w<sub>i</sub>(x,y) &gt; 0
+            </div>
+            <p>This gradually transitions between views instead of letting one image abruptly overwrite another. It
+                reduces border seams, but cannot resolve scene motion or parallax: nearby trees and the sign in Sets 2
+                and 3 remain slightly doubled because their apparent positions change with viewpoint.</p>
+            <div class="comparison-grid">
+                <article class="comparison-item">
+                    <h5>Set 1</h5>
+                    <div class="comparison-pair">
+                        <figure><a href="../results/part1_set1_sources.jpg"><img src="../results/part1_set1_sources.jpg"
+                                    alt="Set 1 source images" loading="lazy"></a>
+                            <figcaption>Sources</figcaption>
+                        </figure>
+                        <figure><a href="../results/part1_set1_mosaic.jpg"><img src="../results/part1_set1_mosaic.jpg"
+                                    alt="Set 1 feather-blended manual mosaic" loading="lazy"></a>
+                            <figcaption>Mosaic</figcaption>
+                        </figure>
+                    </div>
+                </article>
+                <article class="comparison-item">
+                    <h5>Set 2</h5>
+                    <div class="comparison-pair">
+                        <figure><a href="../results/part1_set2_sources.jpg"><img src="../results/part1_set2_sources.jpg"
+                                    alt="Set 2 source images" loading="lazy"></a>
+                            <figcaption>Sources</figcaption>
+                        </figure>
+                        <figure><a href="../results/part1_set2_mosaic.jpg"><img src="../results/part1_set2_mosaic.jpg"
+                                    alt="Set 2 feather-blended manual mosaic" loading="lazy"></a>
+                            <figcaption>Mosaic</figcaption>
+                        </figure>
+                    </div>
+                </article>
+                <article class="comparison-item">
+                    <h5>Set 3</h5>
+                    <div class="comparison-pair">
+                        <figure><a href="../results/part1_set3_sources.jpg"><img src="../results/part1_set3_sources.jpg"
+                                    alt="Set 3 source images" loading="lazy"></a>
+                            <figcaption>Sources</figcaption>
+                        </figure>
+                        <figure><a href="../results/part1_set3_mosaic.jpg"><img src="../results/part1_set3_mosaic.jpg"
+                                    alt="Set 3 feather-blended manual mosaic" loading="lazy"></a>
+                            <figcaption>Mosaic</figcaption>
+                        </figure>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <p class="source-link"><a
+                href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment3/Part1">Part 1 source
+                files and full-resolution outputs</a></p>
+    </main>
+    <footer class="site-footer">
+        <div class="container"><a href="../index.html">&larr; Assignment 3 overview</a><a
+                href="../Part2/index.html">Part 2: automatic stitching &rarr;</a></div>
+    </footer>
+    <script src="../image-links.js" defer></script>
+</body>
+
+</html>

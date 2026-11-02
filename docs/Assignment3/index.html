@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="SYDE 671 Assignment 3: manual image mosaicing, projective warping, feature matching, and automatic panorama stitching.">
+    <title>Assignment 3: Photo Mosaics | SYDE 671</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="./report.css">
+</head>
+
+<body class="assignment-three">
+    <header class="site-header">
+        <nav class="nav" aria-label="Main navigation">
+            <a class="brand" href="../index.html">SYDE 671 &middot; Portfolio</a>
+            <div class="nav-links"><a href="../index.html">Home</a><a href="./index.html" aria-current="page">Assignment
+                    3</a><a href="./Part1/index.html">Manual mosaics</a><a href="./Part2/index.html">Auto stitching</a>
+            </div>
+        </nav>
+    </header>
+    <main class="container report">
+        <p class="breadcrumbs"><a href="../index.html">Home</a> / Assignment 3</p>
+        <header class="report-header">
+            <p class="eyebrow">Assignment 3 &middot; Image mosaics</p>
+            <h1>From point clicks to automatic panoramas</h1>
+            <p class="lead">Estimate projective transforms, resample images by inverse warping, and blend overlapping
+                views. Then replace manual correspondences with Harris features, normalized patch descriptors, and
+                RANSAC.</p>
+        </header>
+        <section class="part-links" aria-label="Assignment sections">
+            <a href="./Part1/index.html"><span class="eyebrow">Part 1 &middot; Manual</span>
+                <h2>Warping &amp; mosaicing</h2>
+                <p>Click corresponding points, estimate homographies, rectify planar objects, and feather-blend three
+                    photo sets.</p><span class="text-link">Read Part 1 &rarr;</span>
+            </a>
+            <a href="./Part2/index.html"><span class="eyebrow">Part 2 &middot; Automatic</span>
+                <h2>Feature matching</h2>
+                <p>Distribute Harris corners with ANMS, compare normalized 8&times;8 descriptors, and reject outliers
+                    with four-point RANSAC.</p><span class="text-link">Read Part 2 &rarr;</span>
+            </a>
+        </section>
+
+        <section class="report-section" id="takeaway">
+            <p class="eyebrow">Main takeaway</p>
+            <h2>Registration quality depends on both geometry and evidence.</h2>
+            <p>In Part 1, each homography comes from manually paired landmarks; in Part 2, local appearance proposes
+                matches and RANSAC keeps the geometrically consistent subset. In both cases, the transform maps one
+                image into a shared projective frame, while interpolation and blending determine how the resampled
+                views look at their seams.</p>
+        </section>
+
+        <section class="report-section" id="datasets">
+            <p class="eyebrow">Three overlapping sequences</p>
+            <h2>One scene, multiple views</h2>
+            <p>The three image sets provide the inputs for the manual and automatic panoramas. A projective panorama
+                assumes the camera rotates about an approximately fixed center of projection; camera translation and
+                scene depth differences introduce parallax, which a single homography cannot remove.</p>
+            <div class="gallery">
+                <figure><a href="./results/part1_set1_sources.jpg"><img src="./results/part1_set1_sources.jpg"
+                            alt="Source photographs in image set 1" loading="lazy"></a>
+                    <figcaption>Set 1 source views</figcaption>
+                </figure>
+                <figure><a href="./results/part1_set2_sources.jpg"><img src="./results/part1_set2_sources.jpg"
+                            alt="Source photographs in image set 2" loading="lazy"></a>
+                    <figcaption>Set 2 source views</figcaption>
+                </figure>
+                <figure><a href="./results/part1_set3_sources.jpg"><img src="./results/part1_set3_sources.jpg"
+                            alt="Source photographs in image set 3" loading="lazy"></a>
+                    <figcaption>Set 3 source views</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="report-section references" id="references">
+            <h2>References &amp; implementation</h2>
+            <ul>
+                <li>SYDE 671 Assignment 3, adapted from the Berkeley CS180 photo-mosaics assignment.</li>
+                <li>Brown, Szeliski, and Winder, <cite>Multi-Image Matching using Multi-Scale Oriented Patches</cite>,
+                    <a href="https://cal-cs180.github.io/fa25/hw/proj3/Papers/MOPS.pdf">MOPS paper</a>.
+                </li>
+                <li>The supplied single-scale Harris implementation is used as permitted by the assignment. ANMS,
+                    descriptor extraction, ratio matching, and four-point RANSAC are implemented in the project code.
+                </li>
+            </ul>
+            <p><a href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment3/Part1">Part 1 source
+                    code</a> &middot;
+                <a href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment3/Part2">Part 2 source
+                    code</a> &middot;
+                <a href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment3">Assignment 3
+                    repository</a>
+            </p>
+        </section>
+    </main>
+    <footer class="site-footer">
+        <div class="container"><a href="../index.html">&larr; Course portfolio</a><a href="./Part1/index.html">Part 1:
+                manual mosaics &rarr;</a></div>
+    </footer>
+    <script src="./image-links.js" defer></script>
+</body>
+
+</html>

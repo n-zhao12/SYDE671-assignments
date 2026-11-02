@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="Assignment 3 Part 2: Harris corners, ANMS, normalized patch descriptors, Lowe-ratio matching, and RANSAC panorama stitching.">
+    <title>Part 2: Automatic Stitching | SYDE 671 Assignment 3</title>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="../report.css">
+</head>
+
+<body class="assignment-three">
+    <header class="site-header">
+        <nav class="nav" aria-label="Main navigation">
+            <a class="brand" href="../../index.html">SYDE 671 &middot; Portfolio</a>
+            <div class="nav-links"><a href="../index.html">Assignment 3</a><a href="../Part1/index.html">Manual
+                    mosaics</a><a href="./index.html" aria-current="page">Auto stitching</a></div>
+        </nav>
+    </header>
+    <main class="container report">
+        <p class="breadcrumbs"><a href="../../index.html">Home</a> / <a href="../index.html">Assignment 3</a> /
+            Part 2</p>
+        <header class="report-header">
+            <p class="eyebrow">Part 2 &middot; Feature matching</p>
+            <h1>Automatic panorama stitching</h1>
+            <p class="lead">A simplified MOPS-inspired pipeline replaces hand-clicked correspondences with spatially
+                distributed Harris corners, normalized local patches, ratio-test matching, and RANSAC homographies.</p>
+        </header>
+        <nav class="section-nav" aria-label="Part 2 sections"><a href="#corners">B.1 Corners &amp; ANMS</a><a
+                href="#descriptors">B.2 Descriptors</a><a href="#matching">B.3 Matching</a><a href="#ransac">B.4 RANSAC
+                &amp; mosaics</a></nav>
+
+        <section class="report-section" id="corners">
+            <p class="eyebrow">B.1 &middot; Harris and adaptive suppression</p>
+            <h2>From many corners to a spatially balanced set</h2>
+            <p>The supplied single-scale Harris detector returns up to 5,000 positive-response candidates. Adaptive
+                non-maximal suppression (ANMS) gives each point the distance to its nearest sufficiently stronger
+                neighbor, using robustness factor 0.9, then retains the 500 largest suppression radii. Unlike selecting
+                only the strongest responses, this spreads features across the image and the overlap region.</p>
+            <div class="comparison-grid">
+                <article class="comparison-item">
+                    <h5>Set 1 &middot; Harris / ANMS</h5>
+                    <div class="comparison-pair">
+                        <figure><a href="../results/part2_set1_harris.jpg"><img src="../results/part2_set1_harris.jpg"
+                                    alt="Harris corner candidates for Set 1" loading="lazy"></a>
+                            <figcaption>Harris candidates</figcaption>
+                        </figure>
+                        <figure><a href="../results/part2_set1_anms.jpg"><img src="../results/part2_set1_anms.jpg"
+                                    alt="Spatially distributed ANMS corners for Set 1" loading="lazy"></a>
+                            <figcaption>ANMS selection</figcaption>
+                        </figure>
+                    </div>
+                </article>
+                <article class="comparison-item">
+                    <h5>Set 2 &middot; Harris / ANMS</h5>
+                    <div class="comparison-pair">
+                        <figure><a href="../results/part2_set2_harris.jpg"><img src="../results/part2_set2_harris.jpg"
+                                    alt="Harris corner candidates for Set 2" loading="lazy"></a>
+                            <figcaption>Harris candidates</figcaption>
+                        </figure>
+                        <figure><a href="../results/part2_set2_anms.jpg"><img src="../results/part2_set2_anms.jpg"
+                                    alt="Spatially distributed ANMS corners for Set 2" loading="lazy"></a>
+                            <figcaption>ANMS selection</figcaption>
+                        </figure>
+                    </div>
+                </article>
+                <article class="comparison-item">
+                    <h5>Set 3 &middot; Harris / ANMS</h5>
+                    <div class="comparison-pair">
+                        <figure><a href="../results/part2_set3_harris.jpg"><img src="../results/part2_set3_harris.jpg"
+                                    alt="Harris corner candidates for Set 3" loading="lazy"></a>
+                            <figcaption>Harris candidates</figcaption>
+                        </figure>
+                        <figure><a href="../results/part2_set3_anms.jpg"><img src="../results/part2_set3_anms.jpg"
+                                    alt="Spatially distributed ANMS corners for Set 3" loading="lazy"></a>
+                            <figcaption>ANMS selection</figcaption>
+                        </figure>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="report-section" id="descriptors">
+            <p class="eyebrow">B.2 &middot; Axis-aligned patch descriptors</p>
+            <h2>Blur a 40 &times; 40 neighborhood, sample 8 &times; 8</h2>
+            <p>For every ANMS point, I Gaussian-blur the grayscale image (sigma 2 pixels), bilinearly sample an
+                axis-aligned 8 &times; 8 patch over a 40 &times; 40 neighborhood, then subtract its mean and divide by
+                its population standard deviation. This makes each 64-value descriptor invariant to local intensity
+                bias and gain. Points without a full neighborhood or with near-constant patches are discarded. The
+                figures below visualize the normalized descriptor values, centered at gray.</p>
+            <div class="equation equation-descriptor" role="math"
+                aria-label="Descriptor vector is the vectorized 8 by 8 patch after subtracting its mean and dividing by its population standard deviation">
+                <div><var>d</var> =
+                    <span class="fraction">
+                        <span>vec(<var>P</var> &minus; &mu;<sub>P</sub>)</span>
+                        <span>&sigma;<sub>P</sub></span>
+                    </span>
+                    &nbsp; &isin; R<sup>64</sup>
+                </div>
+                <small>&mu;<sub>P</sub> = (1/64)&sum;<sub>j=1</sub><sup>64</sup> P<sub>j</sub>, &nbsp;
+                    &sigma;<sub>P</sub> = &radic;[(1/64)&sum;<sub>j=1</sub><sup>64</sup>(P<sub>j</sub> &minus;
+                    &mu;<sub>P</sub>)<sup>2</sup>]</small>
+            </div>
+            <div class="gallery">
+                <figure><a href="../results/part2_set1_descriptors.jpg"><img src="../results/part2_set1_descriptors.jpg"
+                            alt="Sample normalized 8 by 8 descriptor arrays for Set 1, with values centered at gray"
+                            loading="lazy"></a>
+                    <figcaption>Set 1 &middot; normalized descriptor arrays</figcaption>
+                </figure>
+                <figure><a href="../results/part2_set2_descriptors.jpg"><img src="../results/part2_set2_descriptors.jpg"
+                            alt="Sample normalized 8 by 8 descriptor arrays for Set 2, with values centered at gray"
+                            loading="lazy"></a>
+                    <figcaption>Set 2 &middot; normalized descriptor arrays</figcaption>
+                </figure>
+                <figure><a href="../results/part2_set3_descriptors.jpg"><img src="../results/part2_set3_descriptors.jpg"
+                            alt="Sample normalized 8 by 8 descriptor arrays for Set 3, with values centered at gray"
+                            loading="lazy"></a>
+                    <figcaption>Set 3 &middot; normalized descriptor arrays</figcaption>
+                </figure>
+            </div>
+            <p>The normalized 64-value vectors, selected coordinates, and visualization patches are saved per image.
+                As specified, the descriptors are axis-aligned: rotation invariance, multi-scale detection, and the
+                paper's Haar-wavelet indexing are not used.</p>
+        </section>
+
+        <section class="report-section" id="matching">
+            <p class="eyebrow">B.3 &middot; Lowe ratio test</p>
+            <h2>Keep distinctive nearest-neighbor matches</h2>
+            <p>For each descriptor in the moving image, I find the two closest descriptors in the adjacent reference
+                image using Euclidean distance. I accept the nearest match when its distance is less than 0.8 times the
+                second-nearest distance, then keep one-to-one feature assignments. The overlays below show accepted
+                candidates before geometric outlier rejection; their matching colors identify paired points. Figure 6b
+                    of <a href="https://cal-cs180.github.io/fa25/hw/proj3/Papers/MOPS.pdf">Brown et al.</a> shows correct
+                    matches concentrated at lower nearest/second-nearest ratios than incorrect matches. I use 0.8 as a
+                    permissive cutoff to retain candidates; RANSAC then rejects matches that do not agree geometrically.</p>
+            <div class="equation" role="math"
+                aria-label="Accept a match when the nearest descriptor distance divided by the second-nearest descriptor distance is below 0.8">
+                r = d<sub>1</sub> / d<sub>2</sub> &lt; 0.8
+            </div>
+            <div class="gallery">
+                <figure><a href="../results/part2_set1_matches.jpg"><img src="../results/part2_set1_matches.jpg"
+                            alt="Lowe-ratio feature matches between the first two Set 1 images" loading="lazy"></a>
+                    <figcaption>Set 1 &middot; ratio-test matches</figcaption>
+                </figure>
+                <figure><a href="../results/part2_set2_matches.jpg"><img src="../results/part2_set2_matches.jpg"
+                            alt="Lowe-ratio feature matches between the Set 2 images" loading="lazy"></a>
+                    <figcaption>Set 2 &middot; ratio-test matches</figcaption>
+                </figure>
+                <figure><a href="../results/part2_set3_matches.jpg"><img src="../results/part2_set3_matches.jpg"
+                            alt="Lowe-ratio feature matches between the Set 3 images" loading="lazy"></a>
+                    <figcaption>Set 3 &middot; ratio-test matches</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="report-section" id="ransac">
+            <p class="eyebrow">B.4 &middot; Four-point RANSAC</p>
+            <h2>Reject outliers, estimate the transform, stitch</h2>
+            <p>RANSAC repeatedly samples four matches, estimates a homography, and counts matches whose reprojection
+                error is at most 4 pixels at the 1,200-pixel working resolution. The iteration limit adapts to the
+                observed inlier ratio (99.5% target confidence). I refit the homography to the consensus set, compose
+                neighboring transforms into the first image's frame, and blend the warped views with the same feather
+                compositor used in Part 1.</p>
+            <div class="equation equation-derivation" role="math"
+                aria-label="Multiply the homogeneous source point by H to get a, b, c. Divide a and b by c to get the predicted destination coordinate. Reprojection error is the Euclidean distance to u, v; an inlier has error at most four pixels.">
+                <div><var>H</var>[<var>x</var><sub>i</sub>, <var>y</var><sub>i</sub>, 1]<sup>T</sup> =
+                    [<var>a</var><sub>i</sub>, <var>b</var><sub>i</sub>, <var>c</var><sub>i</sub>]<sup>T</sup></div>
+                <div>(<span class="math-hat"><var>x</var></span><sub>i</sub>, <span
+                        class="math-hat"><var>y</var></span><sub>i</sub>) =
+                    (<var>a</var><sub>i</sub>/<var>c</var><sub>i</sub>,
+                    <var>b</var><sub>i</sub>/<var>c</var><sub>i</sub>)
+                </div>
+                <div><var>e</var><sub>i</sub> = &radic;[(<var>u</var><sub>i</sub> &minus; <span
+                        class="math-hat"><var>x</var></span><sub>i</sub>)<sup>2</sup> +
+                    (<var>v</var><sub>i</sub> &minus; <span
+                        class="math-hat"><var>y</var></span><sub>i</sub>)<sup>2</sup>], &nbsp;
+                    inlier if <var>e</var><sub>i</sub> &le; 4 px</div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <caption>Ratio-test matches and RANSAC inliers</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Set / pair</th>
+                            <th scope="col">Matches</th>
+                            <th scope="col">Inliers</th>
+                            <th scope="col">Median inlier reprojection error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Set 1 / 1</td>
+                            <td>167</td>
+                            <td>156</td>
+                            <td>0.61 px</td>
+                        </tr>
+                        <tr>
+                            <td>Set 1 / 2</td>
+                            <td>230</td>
+                            <td>222</td>
+                            <td>0.58 px</td>
+                        </tr>
+                        <tr>
+                            <td>Set 2 / 1</td>
+                            <td>75</td>
+                            <td>59</td>
+                            <td>1.46 px</td>
+                        </tr>
+                        <tr>
+                            <td>Set 3 / 1</td>
+                            <td>72</td>
+                            <td>52</td>
+                            <td>1.77 px</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="gallery">
+                <figure><a href="../results/part2_set1_inliers.jpg"><img src="../results/part2_set1_inliers.jpg"
+                            alt="RANSAC inlier matches between the first two Set 1 images" loading="lazy"></a>
+                    <figcaption>Set 1 &middot; geometrically consistent inliers</figcaption>
+                </figure>
+                <figure><a href="../results/part2_set2_inliers.jpg"><img src="../results/part2_set2_inliers.jpg"
+                            alt="RANSAC inlier matches between the Set 2 images" loading="lazy"></a>
+                    <figcaption>Set 2 &middot; geometrically consistent inliers</figcaption>
+                </figure>
+                <figure><a href="../results/part2_set3_inliers.jpg"><img src="../results/part2_set3_inliers.jpg"
+                            alt="RANSAC inlier matches between the Set 3 images" loading="lazy"></a>
+                    <figcaption>Set 3 &middot; geometrically consistent inliers</figcaption>
+                </figure>
+            </div>
+            <h3>Manual and automatic results</h3>
+            <p>The automatic pipeline produces three mosaics. The side-by-side views use the same source sets as Part 1.
+                Sets 2 and 3 contain nearby foliage and signs at different depths, so residual ghosting is expected:
+                one global homography cannot simultaneously align objects with significant parallax.</p>
+            <div class="gallery">
+                <figure><a href="../results/part2_set1_comparison.jpg"><img src="../results/part2_set1_comparison.jpg"
+                            alt="Manual and automatic Set 1 mosaics side by side" loading="lazy"></a>
+                    <figcaption>Set 1 &middot; manual and automatic</figcaption>
+                </figure>
+                <figure><a href="../results/part2_set2_comparison.jpg"><img src="../results/part2_set2_comparison.jpg"
+                            alt="Manual and automatic Set 2 mosaics side by side" loading="lazy"></a>
+                    <figcaption>Set 2 &middot; manual and automatic</figcaption>
+                </figure>
+                <figure><a href="../results/part2_set3_comparison.jpg"><img src="../results/part2_set3_comparison.jpg"
+                            alt="Manual and automatic Set 3 mosaics side by side" loading="lazy"></a>
+                    <figcaption>Set 3 &middot; manual and automatic</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="report-section references" id="references">
+            <h2>Method notes &amp; source</h2>
+            <ul>
+                <li>Single-scale Harris corners are supplied by the assignment starter; ANMS, descriptor extraction,
+                    ratio matching, and four-point RANSAC are implemented for this project.</li>
+                <li>Brown, Szeliski, and Winder, <cite>Multi-Image Matching using Multi-Scale Oriented Patches</cite>.
+                    The implementation follows the assignment simplifications rather than the paper's full multi-scale,
+                    oriented, wavelet-indexed system.</li>
+                <li>Part 2 defaults: 5,000 Harris candidates, 500 ANMS features, 40 &times; 40 blurred support,
+                    8 &times; 8 descriptors, 0.8 distance ratio, and a 4-pixel RANSAC threshold on resized images.</li>
+            </ul>
+            <p><a href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment3/Part2">Part 2 source
+                    files and full-resolution artifacts</a> &middot;
+                <a href="https://github.com/n-zhao12/SYDE671-assignments/blob/main/Assignment3/requirements.txt">Python
+                    requirements</a>
+            </p>
+        </section>
+    </main>
+    <footer class="site-footer">
+        <div class="container"><a href="../index.html">&larr; Assignment 3 overview</a><a
+                href="../Part1/index.html">Part 1: manual mosaics &rarr;</a></div>
+    </footer>
+    <script src="../image-links.js" defer></script>
+</body>
+
+</html>
