@@ -5,7 +5,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from homography import computeH
+from homography import build_homography_system, computeH
 from mosaic import blend_mosaic
 from point_picker import select_correspondences, select_points
 from warp import warpImageBilinear, warpImageNearestNeighbor
@@ -30,20 +30,45 @@ def _save_image(path: Path, image: np.ndarray) -> None:
 		raise OSError(f"Could not write image: {path}")
 
 
-def _homography_linear_system(
-	source_points: np.ndarray, destination_points: np.ndarray
-) -> tuple[np.ndarray, np.ndarray]:
-	x, y = source_points.T
-	u, v = destination_points.T
-	zeros = np.zeros_like(x)
-	ones = np.ones_like(x)
-	system = np.empty((2 * len(x), 8), dtype=np.float64)
-	system[0::2] = np.column_stack((x, y, ones, zeros, zeros, zeros, -u * x, -u * y))
-	system[1::2] = np.column_stack((zeros, zeros, zeros, x, y, ones, -v * x, -v * y))
-	values = np.empty(2 * len(x), dtype=np.float64)
-	values[0::2] = u
-	values[1::2] = v
-	return system, values
+def _save_homography_system(
+	path: Path,
+	source_points: np.ndarray,
+	destination_points: np.ndarray,
+	source_key: str,
+	destination_key: str,
+) -> None:
+	(
+		system,
+		values,
+		normalized_source,
+		normalized_destination,
+		source_transform,
+		destination_transform,
+	) = build_homography_system(source_points, destination_points)
+	parameters, _, _, _ = np.linalg.lstsq(system, values, rcond=None)
+	normalized_homography = np.append(parameters, 1.0).reshape(3, 3)
+	artifacts = {
+		"A": system,
+		"b": values,
+		"normalized_source_points": normalized_source,
+		"normalized_destination_points": normalized_destination,
+		"source_normalization": source_transform,
+		"destination_normalization": destination_transform,
+		"normalized_homography": normalized_homography,
+	}
+	artifacts[source_key] = source_points
+	artifacts[destination_key] = destination_points
+	np.savez_compressed(path, **artifacts)
+	np.savetxt(
+		path.with_suffix(".txt"),
+		np.column_stack((system, values)),
+		fmt="%.10f",
+		header=(
+			"Each row is [A | b] for A h_normalized = b using normalized points. "
+			"h_normalized = [h11, h12, h13, h21, h22, h23, h31, h32]; h33=1. "
+			"Denormalize with H = inv(T_destination) @ H_normalized @ T_source."
+		),
+	)
 
 
 def _save_source_grid(image_paths: list[Path], images: list[np.ndarray], path: Path) -> None:
@@ -135,19 +160,12 @@ def run_rectification(image_path: Path, name: str, width: int, height: int) -> N
 	output_dir = OUTPUT_DIR / "rectification"
 	output_dir.mkdir(parents=True, exist_ok=True)
 	np.savetxt(output_dir / f"{name}_homography.txt", homography, fmt="%.10f")
-	system, values = _homography_linear_system(source_points, target_points)
-	np.savez_compressed(
+	_save_homography_system(
 		output_dir / f"{name}_linear_system.npz",
-		A=system,
-		b=values,
-		source_points=source_points,
-		target_points=target_points,
-	)
-	np.savetxt(
-		output_dir / f"{name}_linear_system.txt",
-		np.column_stack((system, values)),
-		fmt="%.6f",
-		header="Each row is [A | b] for A h = b, with H[2,2] fixed to 1",
+		source_points,
+		target_points,
+		"source_points",
+		"target_points",
 	)
 	point_view = image.copy()
 	for index, point in enumerate(source_points, start=1):
@@ -211,7 +229,6 @@ def run_mosaic(image_paths: list[Path], name: str, reselect: bool = False) -> No
 			)
 		pair_homography = computeH(moving_points, reference_points)
 		homographies.append(homographies[-1] @ pair_homography)
-		system, values = _homography_linear_system(moving_points, reference_points)
 		_save_correspondence_view(
 			images[index],
 			images[index - 1],
@@ -224,18 +241,12 @@ def run_mosaic(image_paths: list[Path], name: str, reselect: bool = False) -> No
 			pair_homography,
 			fmt="%.10f",
 		)
-		np.savez_compressed(
+		_save_homography_system(
 			correspondence_dir / f"{name}_pair_{index:02}_linear_system.npz",
-			A=system,
-			b=values,
-			moving_points=moving_points,
-			reference_points=reference_points,
-		)
-		np.savetxt(
-			correspondence_dir / f"{name}_pair_{index:02}_linear_system.txt",
-			np.column_stack((system, values)),
-			fmt="%.6f",
-			header="Each row is [A | b] for A h = b, with H[2,2] fixed to 1",
+			moving_points,
+			reference_points,
+			"moving_points",
+			"reference_points",
 		)
 		print(f"Registered image {index + 1}/{len(images)} using {len(moving_points)} point pairs")
 

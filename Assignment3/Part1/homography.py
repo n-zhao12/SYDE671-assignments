@@ -19,8 +19,10 @@ def _normalize_points(points: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return normalized, transform
 
 
-def computeH(im1_pts: np.ndarray, im2_pts: np.ndarray) -> np.ndarray:
-    """Estimate H such that im2_pts ~= H @ im1_pts in homogeneous coordinates."""
+def build_homography_system(
+    im1_pts: np.ndarray, im2_pts: np.ndarray
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Build the normalized-coordinate Ah=b system used to estimate a homography."""
     source = np.asarray(im1_pts, dtype=np.float64)
     destination = np.asarray(im2_pts, dtype=np.float64)
     if source.ndim != 2 or source.shape[1] != 2:
@@ -49,7 +51,26 @@ def computeH(im1_pts: np.ndarray, im2_pts: np.ndarray) -> np.ndarray:
     ))
     values[0::2] = u
     values[1::2] = v
+    return (
+        system,
+        values,
+        source_normalized,
+        destination_normalized,
+        source_transform,
+        destination_transform,
+    )
 
+
+def computeH(im1_pts: np.ndarray, im2_pts: np.ndarray) -> np.ndarray:
+    """Estimate H such that im2_pts ~= H @ im1_pts in homogeneous coordinates."""
+    (
+        system,
+        values,
+        _source_normalized,
+        _destination_normalized,
+        source_transform,
+        destination_transform,
+    ) = build_homography_system(im1_pts, im2_pts)
     parameters, _, rank, _ = np.linalg.lstsq(system, values, rcond=None)
     if rank < 8:
         raise ValueError("Correspondences do not determine a unique homography")

@@ -1,0 +1,18 @@
+C:\Users\zyq02\SYDE671-assignments\Assignment3\Part1>python main.py rectify ..\data\imageSet3_1.jpg --name set3_rect1 --width 800 --height 320
+nearest rectification: 0.075s; valid pixels: 100.0%
+bilinear rectification: 0.202s; valid pixels: 100.0%
+Rectification outputs: C:\Users\zyq02\SYDE671-assignments\Assignment3\Part1\output\rectification
+
+C:\Users\zyq02\SYDE671-assignments\Assignment3\Part1>python main.py rectify ..\data\imageSet3_2.jpg --name set3_rect2 --width 800 --height 320
+nearest rectification: 0.033s; valid pixels: 100.0%
+bilinear rectification: 0.101s; valid pixels: 100.0%
+Rectification outputs: C:\Users\zyq02\SYDE671-assignments\Assignment3\Part1\output\rectification
+
+
+python main.py mosaic --set 2 --reselect
+Registered image 2/2 using 9 point pairs
+Mosaic saved: C:\Users\zyq02\SYDE671-assignments\Assignment3\Part1\output\mosaics\set2_mosaic.png
+Canvas bounds in reference coordinates: (-5409, -1945, 4095, 5390)
+
+
+
