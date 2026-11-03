@@ -95,6 +95,11 @@
     margin-inline: auto;
 }
 
+.feather-template {
+    max-width: 480px;
+    margin-inline: auto;
+}
+
 .assignment-three .gallery {
     grid-template-columns: minmax(0, 1fr);
     gap: 20px;
@@ -119,6 +124,10 @@
 .assignment-three .comparison-pair {
     align-items: start;
     gap: 16px;
+}
+
+.assignment-three .comparison-pair-vertical {
+    grid-template-columns: minmax(0, 1fr);
 }
 
 .assignment-three .comparison-pair img {
@@ -248,6 +257,10 @@
 
 .matrix-system-caption {
     margin: 6px 0 8px;
+}
+
+.numeric-example {
+    margin-top: 32px;
 }
 
 .matrix-denormalization {

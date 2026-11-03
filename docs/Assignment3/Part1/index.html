@@ -65,6 +65,13 @@
                 least squares. Point coordinates are normalized before solving for better numerical conditioning, then
                 the homography is denormalized.
             </p>
+            <h3>Implementation: <code>computeH(im1_pts, im2_pts)</code></h3>
+            <p>The function builds the normalized linear system, solves for the eight free parameters by least squares,
+                and denormalizes the resulting homography. See the
+                <a href="https://github.com/n-zhao12/SYDE671-assignments/blob/main/Assignment3/Part1/homography.py">homography
+                    implementation</a>.
+            </p>
+            <h3>System of equations</h3>
             <div class="matrix-system" role="math"
                 aria-label="For each normalized point pair, the two rows of the 2 by 8 coefficient matrix multiply the eight homography parameters to equal u and v">
                 <p class="matrix-system-title">For one normalized point pair (x<sub>i</sub>, y<sub>i</sub>) &rarr;
@@ -95,6 +102,7 @@
                     H = T<sub>destination</sub><sup>&minus;1</sup> H<sub>normalized</sub> T<sub>source</sub>
                 </div>
             </div>
+            <h3>Correspondences visualized on the images</h3>
             <div class="gallery">
                 <figure><a href="../results/part1_set1_matches.jpg"><img src="../results/part1_set1_matches.jpg"
                             alt="Manually clicked correspondences from Set 1 image 1 to image 2" loading="lazy"></a>
@@ -107,11 +115,11 @@
                 </figure>
                 <figure><a href="../results/part1_set2_matches.jpg"><img src="../results/part1_set2_matches.jpg"
                             alt="Clicked correspondence pairs between Set 2 images" loading="lazy"></a>
-                    <figcaption>Set 2 &middot; manually clicked correspondences</figcaption>
+                    <figcaption>Set 2</figcaption>
                 </figure>
                 <figure><a href="../results/part1_set3_matches.jpg"><img src="../results/part1_set3_matches.jpg"
                             alt="Clicked correspondence pairs between Set 3 images" loading="lazy"></a>
-                    <figcaption>Set 3 &middot; manually clicked correspondences</figcaption>
+                    <figcaption>Set 3</figcaption>
                 </figure>
             </div>
             <details class="numeric-example" open>
@@ -381,7 +389,7 @@
                         </tbody>
                     </table>
                 </div>
-                <h4>Recovered denormalized homography</h4>
+                <h4>Recovered homography matrix</h4>
                 <pre class="homography-matrix"><code>H = [ 1.073469   0.020217  -1673.738979]
     [ 0.007044   1.090269     57.009333]
     [ 0.000009   0.000016      1.000000]</code></pre>
@@ -413,38 +421,57 @@
                     <figcaption>Rectification 2 &middot; nearest neighbor and bilinear</figcaption>
                 </figure>
             </div>
-            <p>Nearest neighbor is faster in these single-run measurements, while bilinear interpolation produces
-                smoother edges and less pixelation. On image 1 the measured times were 0.075 s and 0.202 s; on image 2,
-                0.033 s and 0.101 s, respectively. These timings depend on the machine and run conditions. The
-                comparisons use the same 800 &times; 320 target size.</p>
+            <p>Both comparisons use an 800 &times; 320 output. Nearest-neighbor took 0.075 s and 0.033 s; bilinear took
+                0.202 s and 0.101 s, respectively. These single-run measurements show nearest-neighbor was faster on
+                this machine.
+                Meanwhile, it's observed that the bilinear interpolation produces smoother edges and less pixelation.
+            </p>
         </section>
 
         <section class="report-section" id="mosaics">
             <p class="eyebrow">A.4 &middot; Feather blending</p>
             <h2>Three manually registered mosaics</h2>
-            <p>Each image is mapped into a shared panorama coordinate system. A per-pixel feather weight increases with
-                distance from the source image border. I warp both the image and its weight map, accumulate weighted
-                pixel values, then divide by the accumulated weights:</p>
+            <p>I use <strong>weighted averaging with feather blending</strong>. For each source image, the feather
+                weight increases with distance from its nearest border and is normalized by its maximum distance:
+                &alpha;<sub>i</sub> = d<sub>i</sub>/max(d<sub>i</sub>). I inverse-warp both the image and its weight
+                map into the shared panorama canvas. A validity mask V<sub>i</sub> is 1 where the inverse-mapped source
+                coordinate is inside the image and 0 elsewhere, so empty canvas pixels do not contribute.</p>
             <div class="equation equation-average" role="math"
-                aria-label="Mosaic pixel is the weighted sum of warped image pixels divided by the sum of their weights, where the weight sum is positive">
+                aria-label="Mosaic pixel equals the sum over images of validity mask times warped feather weight times warped image value, divided by the sum of validity mask times warped feather weight, where the denominator is positive">
                 <var>M</var>(x,y) =
                 <span class="fraction">
-                    <span>&sum;<sub>i=1</sub><sup>N</sup> w<sub>i</sub>(x,y)
+                    <span>&sum;<sub>i=1</sub><sup>N</sup> V<sub>i</sub>(x,y) &alpha;<sub>i</sub><sup>warped</sup>(x,y)
                         <var>I</var><sub>i</sub><sup>warped</sup>(x,y)</span>
-                    <span>&sum;<sub>i=1</sub><sup>N</sup> w<sub>i</sub>(x,y)</span>
+                    <span>&sum;<sub>i=1</sub><sup>N</sup> V<sub>i</sub>(x,y)
+                        &alpha;<sub>i</sub><sup>warped</sup>(x,y)</span>
                 </span>
-                &nbsp; when &sum;<sub>i=1</sub><sup>N</sup> w<sub>i</sub>(x,y) &gt; 0
+                &nbsp; when the denominator &gt; 0
             </div>
+            <figure class="result overview-result feather-template">
+                <a href="../results/part1_feather_weight_template.jpg"><img
+                        src="../results/part1_feather_weight_template.jpg"
+                        alt="Source-space feather weight template: dark edges have low weight and the bright center has high weight"
+                        loading="lazy"></a>
+                <figcaption>Source-space feather-weight template. All source photographs are 4096 &times; 3072, so
+                    this edge-distance map is identical for each input. Each map is then inverse-warped by its own
+                    homography, giving it a different support in panorama coordinates.</figcaption>
+            </figure>
             <p>This gradually transitions between views instead of letting one image abruptly overwrite another. It
                 reduces border seams, but cannot resolve scene motion or parallax: nearby trees and the sign in Sets 2
                 and 3 remain slightly doubled because their apparent positions change with viewpoint.</p>
             <div class="comparison-grid">
                 <article class="comparison-item">
                     <h5>Set 1</h5>
-                    <div class="comparison-pair">
+                    <div class="comparison-pair comparison-pair-vertical">
                         <figure><a href="../results/part1_set1_sources.jpg"><img src="../results/part1_set1_sources.jpg"
                                     alt="Set 1 source images" loading="lazy"></a>
                             <figcaption>Sources</figcaption>
+                        </figure>
+                        <figure><a href="../results/part1_set1_coverage_mask.jpg"><img
+                                    src="../results/part1_set1_coverage_mask.jpg"
+                                    alt="Set 1 panorama coverage mask; white pixels are covered by warped inputs and black pixels are empty canvas"
+                                    loading="lazy"></a>
+                            <figcaption>Coverage mask &middot; white = covered, black = empty</figcaption>
                         </figure>
                         <figure><a href="../results/part1_set1_mosaic.jpg"><img src="../results/part1_set1_mosaic.jpg"
                                     alt="Set 1 feather-blended manual mosaic" loading="lazy"></a>
@@ -454,10 +481,16 @@
                 </article>
                 <article class="comparison-item">
                     <h5>Set 2</h5>
-                    <div class="comparison-pair">
+                    <div class="comparison-pair comparison-pair-vertical">
                         <figure><a href="../results/part1_set2_sources.jpg"><img src="../results/part1_set2_sources.jpg"
                                     alt="Set 2 source images" loading="lazy"></a>
                             <figcaption>Sources</figcaption>
+                        </figure>
+                        <figure><a href="../results/part1_set2_coverage_mask.jpg"><img
+                                    src="../results/part1_set2_coverage_mask.jpg"
+                                    alt="Set 2 panorama coverage mask; white pixels are covered by warped inputs and black pixels are empty canvas"
+                                    loading="lazy"></a>
+                            <figcaption>Coverage mask &middot; white = covered, black = empty</figcaption>
                         </figure>
                         <figure><a href="../results/part1_set2_mosaic.jpg"><img src="../results/part1_set2_mosaic.jpg"
                                     alt="Set 2 feather-blended manual mosaic" loading="lazy"></a>
@@ -467,10 +500,16 @@
                 </article>
                 <article class="comparison-item">
                     <h5>Set 3</h5>
-                    <div class="comparison-pair">
+                    <div class="comparison-pair comparison-pair-vertical">
                         <figure><a href="../results/part1_set3_sources.jpg"><img src="../results/part1_set3_sources.jpg"
                                     alt="Set 3 source images" loading="lazy"></a>
                             <figcaption>Sources</figcaption>
+                        </figure>
+                        <figure><a href="../results/part1_set3_coverage_mask.jpg"><img
+                                    src="../results/part1_set3_coverage_mask.jpg"
+                                    alt="Set 3 panorama coverage mask; white pixels are covered by warped inputs and black pixels are empty canvas"
+                                    loading="lazy"></a>
+                            <figcaption>Coverage mask &middot; white = covered, black = empty</figcaption>
                         </figure>
                         <figure><a href="../results/part1_set3_mosaic.jpg"><img src="../results/part1_set3_mosaic.jpg"
                                     alt="Set 3 feather-blended manual mosaic" loading="lazy"></a>

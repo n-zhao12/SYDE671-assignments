@@ -34,48 +34,48 @@
 
         <section class="report-section" id="corners">
             <p class="eyebrow">B.1 &middot; Harris and adaptive suppression</p>
-            <h2>From many corners to a spatially balanced set</h2>
+            <h2>Harris corners before and after ANMS</h2>
             <p>The supplied single-scale Harris detector returns up to 5,000 positive-response candidates. Adaptive
                 non-maximal suppression (ANMS) gives each point the distance to its nearest sufficiently stronger
                 neighbor, using robustness factor 0.9, then retains the 500 largest suppression radii. Unlike selecting
                 only the strongest responses, this spreads features across the image and the overlap region.</p>
             <div class="comparison-grid">
                 <article class="comparison-item">
-                    <h5>Set 1 &middot; Harris / ANMS</h5>
+                    <h5>Set 1 &middot; before / after ANMS</h5>
                     <div class="comparison-pair">
                         <figure><a href="../results/part2_set1_harris.jpg"><img src="../results/part2_set1_harris.jpg"
-                                    alt="Harris corner candidates for Set 1" loading="lazy"></a>
-                            <figcaption>Harris candidates</figcaption>
+                                    alt="Harris corners before ANMS for Set 1" loading="lazy"></a>
+                            <figcaption>Before ANMS &middot; Harris corners</figcaption>
                         </figure>
                         <figure><a href="../results/part2_set1_anms.jpg"><img src="../results/part2_set1_anms.jpg"
-                                    alt="Spatially distributed ANMS corners for Set 1" loading="lazy"></a>
-                            <figcaption>ANMS selection</figcaption>
+                                    alt="Harris corners selected by ANMS for Set 1" loading="lazy"></a>
+                            <figcaption>After ANMS &middot; selected corners</figcaption>
                         </figure>
                     </div>
                 </article>
                 <article class="comparison-item">
-                    <h5>Set 2 &middot; Harris / ANMS</h5>
+                    <h5>Set 2 &middot; before / after ANMS</h5>
                     <div class="comparison-pair">
                         <figure><a href="../results/part2_set2_harris.jpg"><img src="../results/part2_set2_harris.jpg"
-                                    alt="Harris corner candidates for Set 2" loading="lazy"></a>
-                            <figcaption>Harris candidates</figcaption>
+                                    alt="Harris corners before ANMS for Set 2" loading="lazy"></a>
+                            <figcaption>Before ANMS &middot; Harris corners</figcaption>
                         </figure>
                         <figure><a href="../results/part2_set2_anms.jpg"><img src="../results/part2_set2_anms.jpg"
-                                    alt="Spatially distributed ANMS corners for Set 2" loading="lazy"></a>
-                            <figcaption>ANMS selection</figcaption>
+                                    alt="Harris corners selected by ANMS for Set 2" loading="lazy"></a>
+                            <figcaption>After ANMS &middot; selected corners</figcaption>
                         </figure>
                     </div>
                 </article>
                 <article class="comparison-item">
-                    <h5>Set 3 &middot; Harris / ANMS</h5>
+                    <h5>Set 3 &middot; before / after ANMS</h5>
                     <div class="comparison-pair">
                         <figure><a href="../results/part2_set3_harris.jpg"><img src="../results/part2_set3_harris.jpg"
-                                    alt="Harris corner candidates for Set 3" loading="lazy"></a>
-                            <figcaption>Harris candidates</figcaption>
+                                    alt="Harris corners before ANMS for Set 3" loading="lazy"></a>
+                            <figcaption>Before ANMS &middot; Harris corners</figcaption>
                         </figure>
                         <figure><a href="../results/part2_set3_anms.jpg"><img src="../results/part2_set3_anms.jpg"
-                                    alt="Spatially distributed ANMS corners for Set 3" loading="lazy"></a>
-                            <figcaption>ANMS selection</figcaption>
+                                    alt="Harris corners selected by ANMS for Set 3" loading="lazy"></a>
+                            <figcaption>After ANMS &middot; selected corners</figcaption>
                         </figure>
                     </div>
                 </article>
@@ -121,8 +121,9 @@
                 </figure>
             </div>
             <p>The normalized 64-value vectors, selected coordinates, and visualization patches are saved per image.
-                As specified, the descriptors are axis-aligned: rotation invariance, multi-scale detection, and the
-                paper's Haar-wavelet indexing are not used.</p>
+                They are stored in compressed <code>.npz</code> data files for reproducibility; the figures above show
+                the descriptors in a readable 8 &times; 8 form. As specified, the descriptors are axis-aligned:
+                rotation invariance, multi-scale detection, and the paper's Haar-wavelet indexing are not used.</p>
         </section>
 
         <section class="report-section" id="matching">
@@ -233,8 +234,13 @@
             </div>
             <h3>Manual and automatic results</h3>
             <p>The automatic pipeline produces three mosaics. The side-by-side views use the same source sets as Part 1.
-                Sets 2 and 3 contain nearby foliage and signs at different depths, so residual ghosting is expected:
-                one global homography cannot simultaneously align objects with significant parallax.</p>
+                In these examples, the automatic mosaics look more coherent overall, with less widespread residual
+                ghosting. The methods prioritize different evidence: when selecting manual correspondences, I could
+                focus on a particular object, such as the Set 3 street sign. The automatic pipeline instead uses a
+                broader set of spatially distributed features and RANSAC consensus, without specifically prioritizing
+                that sign. As a result, the automatic Set 3 mosaic aligns the sign less closely even though the wider
+                scene appears more consistent. Both methods retain local ghosting because one global homography cannot
+                fully align objects at different depths.</p>
             <div class="gallery">
                 <figure><a href="../results/part2_set1_comparison.jpg"><img src="../results/part2_set1_comparison.jpg"
                             alt="Manual and automatic Set 1 mosaics side by side" loading="lazy"></a>

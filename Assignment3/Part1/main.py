@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 
 from homography import build_homography_system, computeH
-from mosaic import blend_mosaic
+from mosaic import blend_mosaic, feather_weight_map
 from point_picker import select_correspondences, select_points
 from warp import warpImageBilinear, warpImageNearestNeighbor
 
@@ -95,6 +95,40 @@ def _save_source_grid(image_paths: list[Path], images: list[np.ndarray], path: P
 			(x + 6, y + thumbnail_height + 22),
 			cv2.FONT_HERSHEY_SIMPLEX,
 			0.55,
+			(255, 255, 255),
+			1,
+		)
+	_save_image(path, grid)
+
+
+def _save_feather_weight_grid(
+	image_paths: list[Path], images: list[np.ndarray], path: Path
+) -> None:
+	thumbnail_width = 360
+	thumbnail_height = 260
+	label_height = 30
+	columns = min(3, len(images))
+	rows = (len(images) + columns - 1) // columns
+	grid = np.zeros(
+		(rows * (thumbnail_height + label_height), columns * thumbnail_width, 3),
+		dtype=np.uint8,
+	)
+	for index, (image_path, image) in enumerate(zip(image_paths, images)):
+		weights = feather_weight_map(image.shape[0], image.shape[1])
+		weight_image = np.rint(weights * 255.0).astype(np.uint8)
+		scale = min(thumbnail_width / image.shape[1], thumbnail_height / image.shape[0])
+		size = (max(1, round(image.shape[1] * scale)), max(1, round(image.shape[0] * scale)))
+		thumbnail = cv2.resize(weight_image, size, interpolation=cv2.INTER_AREA)
+		row, column = divmod(index, columns)
+		x = column * thumbnail_width
+		y = row * (thumbnail_height + label_height)
+		grid[y:y + size[1], x:x + size[0]] = cv2.cvtColor(thumbnail, cv2.COLOR_GRAY2BGR)
+		cv2.putText(
+			grid,
+			f"{image_path.name}: feather weight",
+			(x + 6, y + thumbnail_height + 22),
+			cv2.FONT_HERSHEY_SIMPLEX,
+			0.48,
 			(255, 255, 255),
 			1,
 		)
@@ -253,6 +287,7 @@ def run_mosaic(image_paths: list[Path], name: str, reselect: bool = False) -> No
 	mosaic, valid, bounds = blend_mosaic(images, homographies)
 	output_dir.mkdir(parents=True, exist_ok=True)
 	_save_source_grid(image_paths, images, output_dir / f"{name}_sources.png")
+	_save_feather_weight_grid(image_paths, images, output_dir / f"{name}_feather_weights.png")
 	_save_image(output_dir / f"{name}_mosaic.png", mosaic)
 	_save_image(output_dir / f"{name}_mask.png", valid.astype(np.uint8) * 255)
 	np.savez_compressed(output_dir / f"{name}_transforms.npz", homographies=np.asarray(homographies), bounds=bounds)

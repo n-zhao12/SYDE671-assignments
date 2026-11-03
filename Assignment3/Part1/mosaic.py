@@ -27,7 +27,10 @@ def transformed_bounds(
     return int(minimum[0]), int(minimum[1]), int(maximum[0]), int(maximum[1])
 
 
-def _feather_weights(height: int, width: int) -> np.ndarray:
+def feather_weight_map(height: int, width: int) -> np.ndarray:
+    """Return normalized edge-distance weights for feather blending."""
+    if height < 1 or width < 1:
+        raise ValueError("feather weight dimensions must be positive")
     y, x = np.indices((height, width), dtype=np.float64)
     distance_to_edge = np.minimum.reduce((x + 1, y + 1, width - x, height - y))
     return distance_to_edge / max(1.0, float(distance_to_edge.max()))
@@ -62,7 +65,7 @@ def blend_mosaic(
     weight_sum = np.zeros(canvas_shape[:2], dtype=np.float64)
     for image, homography in zip(images, homographies):
         warped, valid, _ = warp_image(image, homography, "bilinear", canvas_bounds)
-        source_weights = _feather_weights(image.shape[0], image.shape[1])
+        source_weights = feather_weight_map(image.shape[0], image.shape[1])
         warped_weights, weight_valid, _ = warp_image(
             source_weights, homography, "bilinear", canvas_bounds
         )
