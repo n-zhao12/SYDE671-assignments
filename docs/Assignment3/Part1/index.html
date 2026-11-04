@@ -399,8 +399,9 @@
         <section class="report-section" id="rectification">
             <p class="eyebrow">A.3 &middot; Inverse warping</p>
             <h2>Rectifying a planar sign panel</h2>
-            <p>I click the four outer corners of the same flat sign panel in each photograph and map them to an
-                800 &times; 320 output rectangle. For every destination pixel, inverse warping applies
+            <p>The first two results are from different photographs (Set 3 images 1 and 2) of the same physical sign,
+                not two different signs. I click its four outer corners in each photograph and independently rectify
+                each view to an 800 &times; 320 output rectangle. For every destination pixel, inverse warping applies
                 <var>H</var><sup>-1</sup> to find its source coordinate, avoiding the holes produced by forward
                 splatting. The nearest-neighbor method rounds to one source pixel; bilinear interpolation takes a
                 weighted average of the four surrounding pixels.
@@ -411,20 +412,27 @@
             </div>
             <div class="gallery">
                 <figure><a href="../results/part1_rect_set3_1.jpg"><img src="../results/part1_rect_set3_1.jpg"
-                            alt="Nearest-neighbor and bilinear rectification comparison for the first sign photo"
+                            alt="Nearest-neighbor and bilinear rectification comparison for Set 3 image 1 of the sign"
                             loading="lazy"></a>
-                    <figcaption>Rectification 1 &middot; nearest neighbor and bilinear</figcaption>
+                    <figcaption>Set 3 image 1 &middot; same sign, nearest neighbor and bilinear</figcaption>
                 </figure>
                 <figure><a href="../results/part1_rect_set3_2.jpg"><img src="../results/part1_rect_set3_2.jpg"
-                            alt="Nearest-neighbor and bilinear rectification comparison for the second sign photo"
+                            alt="Nearest-neighbor and bilinear rectification comparison for Set 3 image 2 of the same sign"
                             loading="lazy"></a>
-                    <figcaption>Rectification 2 &middot; nearest neighbor and bilinear</figcaption>
+                    <figcaption>Set 3 image 2 &middot; same sign, nearest neighbor and bilinear</figcaption>
+                </figure>
+                <figure><a href="../results/part1_rect_set2_1.png"><img src="../results/part1_rect_set2_1.png"
+                            alt="Nearest-neighbor and bilinear rectification of a separate square sign panel from Set 2 image 1"
+                            loading="lazy"></a>
+                    <figcaption>Set 2 image 1 &middot; separate square sign panel, 300 &times; 300 output</figcaption>
                 </figure>
             </div>
-            <p>Both comparisons use an 800 &times; 320 output. Nearest-neighbor took 0.075 s and 0.033 s; bilinear took
-                0.202 s and 0.101 s, respectively. These single-run measurements show nearest-neighbor was faster on
-                this machine.
-                Meanwhile, it's observed that the bilinear interpolation produces smoother edges and less pixelation.
+            <p>The Set 3 comparisons use an 800 &times; 320 output: nearest-neighbor took 0.075 s and 0.033 s for images
+                1 and 2, respectively, while bilinear took 0.202 s and 0.101 s. For the Set 2 square panel at 300
+                &times;
+                300, nearest-neighbor took 0.014 s and bilinear took 0.034 s. In each same-size comparison,
+                nearest-neighbor was faster on this machine, while bilinear interpolation produced smoother edges and
+                less pixelation.
             </p>
         </section>
 
