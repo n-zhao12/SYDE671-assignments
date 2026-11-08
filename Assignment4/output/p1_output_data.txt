@@ -1,0 +1,32 @@
+--------------------------------------------------------------------------------
+Set: data/set1
+--------------------------------------------------------------------------------
+Fundamental Matrix from LLS  8-point algorithm:
+ [[ 1.55218081e-06 -8.18161523e-06 -1.50440111e-03]
+ [-5.86997052e-06 -3.02892219e-07 -1.13607605e-02]
+ [-3.52312036e-03  1.41453881e-02  9.99828068e-01]]
+Distance to lines in image 1 for LLS: 28.0256629375456
+Distance to lines in image 2 for LLS: 25.1628758000461
+p'^T F p = 0.20656426641274095
+Fundamental Matrix from normalized 8-point algorithm:
+ [[ 4.45505557e-06 -3.63935568e-05  6.03119338e-04]
+ [-3.35055836e-05 -2.32218046e-06 -4.39148773e-02]
+ [-5.84762546e-03  6.03085864e-02  9.97195967e-01]]
+Distance to lines in image 1 for normalized: 0.8905729361893551
+Distance to lines in image 2 for normalized: 0.8286681346452989
+--------------------------------------------------------------------------------
+Set: data/set2
+--------------------------------------------------------------------------------
+Fundamental Matrix from LLS  8-point algorithm:
+ [[-5.63087200e-06  2.74976583e-05 -6.42650411e-03]
+ [-2.77622828e-05 -6.74748522e-06  1.52182033e-02]
+ [ 1.07623595e-02 -1.22519240e-02 -9.99730547e-01]]
+Distance to lines in image 1 for LLS: 9.701438829448914
+Distance to lines in image 2 for LLS: 14.568227190521556
+p'^T F p = 2.9199819575079005
+Fundamental Matrix from normalized 8-point algorithm:
+ [[-1.33351218e-05  2.22048310e-04 -1.37802168e-02]
+ [ 3.20320025e-04  2.83731330e-05  6.19621780e-01]
+ [ 2.08672226e-02 -7.52241693e-01 -2.22656232e-01]]
+Distance to lines in image 1 for normalized: 0.889496061697822
+Distance to lines in image 2 for normalized: 0.891717236786535

@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="SYDE 671 Assignment 4: epipolar geometry, image rectification, affine factorization, and structure from motion.">
+    <title>Assignment 4: From Correspondences to 3D | SYDE 671</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../Assignment3/report.css">
+</head>
+
+<body class="assignment-three">
+    <header class="site-header">
+        <nav class="nav" aria-label="Main navigation">
+            <a class="brand" href="../index.html">SYDE 671 &middot; Portfolio</a>
+            <div class="nav-links">
+                <a href="../index.html">Home</a>
+                <a href="#p1">Fundamental matrix</a>
+                <a href="#p2">Rectification</a>
+                <a href="#p3">Factorization</a>
+                <a href="#p4" aria-current="page">Structure from motion</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container report">
+        <p class="breadcrumbs"><a href="../index.html">Home</a> / Assignment 4</p>
+        <header class="report-header">
+            <p class="eyebrow">Assignment 4 &middot; Multi-view geometry</p>
+            <h1>From image matches to 3D structure</h1>
+            <p class="lead">Four steps connect corresponding image points to camera geometry: estimate the
+                fundamental matrix, rectify a stereo pair, factor an affine measurement matrix, and triangulate a
+                multi-view statue reconstruction.</p>
+        </header>
+
+        <nav class="section-nav" aria-label="Report sections">
+            <a href="#p1">01 &middot; Epipolar geometry</a>
+            <a href="#p2">02 &middot; Rectification</a>
+            <a href="#p3">03 &middot; Factorization</a>
+            <a href="#p4">04 &middot; Structure from motion</a>
+            <a href="#reflection">Takeaways</a>
+        </nav>
+
+        <section class="report-section" id="p1">
+            <p class="eyebrow">Part 1 &middot; Fundamental matrix</p>
+            <h2>Correspondences constrain epipolar lines</h2>
+            <p>For matched homogeneous points, the fundamental matrix satisfies
+                <code>p2.T @ F @ p1 = 0</code>. I formed the eight-point design matrix, solved its least-squares
+                nullspace with SVD, and set the smallest singular value of <code>F</code> to zero. The normalized
+                version first translates each point set to its centroid and scales its mean distance to
+                <code>sqrt(2)</code>, then denormalizes the estimated matrix.
+            </p>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data set</th>
+                            <th>Method</th>
+                            <th>Image 1 mean distance</th>
+                            <th>Image 2 mean distance</th>
+                            <th>Maximum |p2.T F p1|</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>set1</td>
+                            <td>LLS</td>
+                            <td>28.03 px</td>
+                            <td>25.16 px</td>
+                            <td>Not recorded</td>
+                        </tr>
+                        <tr>
+                            <td>set1</td>
+                            <td>Normalized</td>
+                            <td>0.89 px</td>
+                            <td>0.83 px</td>
+                            <td>0.2066</td>
+                        </tr>
+                        <tr>
+                            <td>set2</td>
+                            <td>LLS</td>
+                            <td>9.70 px</td>
+                            <td>14.57 px</td>
+                            <td>Not recorded</td>
+                        </tr>
+                        <tr>
+                            <td>set2</td>
+                            <td>Normalized</td>
+                            <td>0.89 px</td>
+                            <td>0.89 px</td>
+                            <td>2.9200</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>The point-to-line distances are average perpendicular distances in pixels. Normalization greatly
+                improves the estimates on both sets. The algebraic residual is scale-dependent and is not a pixel
+                error.</p>
+
+            <details>
+                <summary>Fundamental matrices (full precision)</summary>
+                <h3>set1 &middot; LLS</h3>
+                <pre class="equation"><code>[[ 1.55218081e-06, -8.18161523e-06, -1.50440111e-03],
+ [-5.86997052e-06, -3.02892219e-07, -1.13607605e-02],
+ [-3.52312036e-03,  1.41453881e-02,  9.99828068e-01]]</code></pre>
+                <h3>set1 &middot; normalized</h3>
+                <pre class="equation"><code>[[ 4.45505557e-06, -3.63935568e-05,  6.03119338e-04],
+ [-3.35055836e-05, -2.32218046e-06, -4.39148773e-02],
+ [-5.84762546e-03,  6.03085864e-02,  9.97195967e-01]]</code></pre>
+                <h3>set2 &middot; LLS</h3>
+                <pre class="equation"><code>[[-5.63087200e-06,  2.74976583e-05, -6.42650411e-03],
+ [-2.77622828e-05, -6.74748522e-06,  1.52182033e-02],
+ [ 1.07623595e-02, -1.22519240e-02, -9.99730547e-01]]</code></pre>
+                <h3>set2 &middot; normalized</h3>
+                <pre class="equation"><code>[[-1.33351218e-05,  2.22048310e-04, -1.37802168e-02],
+ [ 3.20320025e-04,  2.83731330e-05,  6.19621780e-01],
+ [ 2.08672226e-02, -7.52241693e-01, -2.22656232e-01]]</code></pre>
+            </details>
+
+            <div class="comparison-grid">
+                <figure class="result">
+                    <a href="./results/p1_set1_LLS.png"><img src="./results/p1_set1_LLS.png"
+                            alt="Set 1 image pair with LLS epipolar lines and matched points"></a>
+                    <figcaption>set1 &middot; Linear least-squares estimate. Raw coordinates make this solution more
+                        sensitive to noise.</figcaption>
+                </figure>
+                <figure class="result">
+                    <a href="./results/p1_set1_normalized.png"><img src="./results/p1_set1_normalized.png"
+                            alt="Set 1 image pair with normalized eight-point epipolar lines and matched points"></a>
+                    <figcaption>set1 &middot; Normalized estimate. The epipolar lines pass much closer to the matches.
+                    </figcaption>
+                </figure>
+                <figure class="result">
+                    <a href="./results/p1_set2_LLS.png"><img src="./results/p1_set2_LLS.png"
+                            alt="Set 2 image pair with LLS epipolar lines and matched points"></a>
+                    <figcaption>set2 &middot; Linear least-squares estimate.</figcaption>
+                </figure>
+                <figure class="result">
+                    <a href="./results/p1_set2_normalized.png"><img src="./results/p1_set2_normalized.png"
+                            alt="Set 2 image pair with normalized eight-point epipolar lines and matched points"></a>
+                    <figcaption>set2 &middot; Normalized estimate.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="report-section" id="p2">
+            <p class="eyebrow">Part 2 &middot; Image rectification</p>
+            <h2>Make corresponding epipolar lines horizontal</h2>
+            <p>The epipoles are the null vectors of <code>F.T</code> and <code>F</code>. To construct the second
+                image homography, I translate the image center to the origin, rotate the epipole onto the horizontal
+                axis using the sign factor <code>alpha</code>, and apply a projective transform that sends it to
+                infinity. I then use the point correspondences to solve the remaining matching-homography parameters
+                with least squares.</p>
+            <p>For set1, the epipoles are approximately <code>e1 = (-1300.79, -142.66, 1)</code> and
+                <code>e2 = (1654.22, 45.43, 1)</code>. In a shared rectified coordinate frame, corresponding points
+                have a mean vertical difference of <code>0.86 px</code> (maximum <code>3.87 px</code>); the
+                transformed fundamental matrix has the expected horizontal-epipolar form.
+            </p>
+            <figure class="result">
+                <a href="./results/p2.png"><img src="./results/p2.png"
+                        alt="Rectified image pair with horizontal epipolar lines"></a>
+                <figcaption>Rectified set1 pair. Horizontal epipolar lines make corresponding points easier to search
+                    along the same scanline.</figcaption>
+            </figure>
+        </section>
+
+        <section class="report-section" id="p3">
+            <p class="eyebrow">Part 3 &middot; Factorization</p>
+            <h2>Recover affine shape and camera motion</h2>
+            <p>I center the four-row measurement matrix and retain its leading three singular components to obtain a
+                rank-three motion/structure factorization. The metric upgrade estimates a positive-definite metric
+                from orthographic row constraints with a weak isotropic prior. For the sparse subset, those
+                constraints become ill-conditioned, so the implementation retains the rank-three factorization
+                instead of applying an unstable upgrade. Reconstructions can differ from ground truth by scale and
+                rotation; fewer correspondences also make the subset less stable.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Correspondence set</th>
+                            <th>Centered measurement-matrix singular values</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>set1 (37 points)</td>
+                            <td>959.5852, 540.4761, 184.4317, 27.9152</td>
+                        </tr>
+                        <tr>
+                            <td>set1 subset (18 points)</td>
+                            <td>264.5440, 210.0607, 7.2192, 5.1286</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>The ideal affine orthographic measurement matrix has rank three, so its fourth singular value is zero.
+                Here it is nonzero because the measured points contain noise and the real camera motion is not
+                perfectly affine/orthographic. In the subset, the third and fourth singular values are both much
+                smaller relative to the first two, reflecting the loss of geometric information.</p>
+            <div class="comparison-grid">
+                <figure class="result">
+                    <a href="./results/p3_1.png"><img src="./results/p3_1.png"
+                            alt="Three-dimensional factorization result beside set 1 ground-truth points"></a>
+                    <figcaption>set1 &middot; Factorization result and ground truth. The configurations are compared up
+                        to scale and rotation.</figcaption>
+                </figure>
+                <figure class="result">
+                    <a href="./results/p3_2.png"><img src="./results/p3_2.png"
+                            alt="Three-dimensional subset factorization result beside ground-truth points"></a>
+                    <figcaption>set1 subset &middot; With fewer matches, the recovered shape is less stable and less
+                        similar to ground truth.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="report-section" id="p4">
+            <p class="eyebrow">Part 4 &middot; Structure from motion</p>
+            <h2>Choose camera pose, triangulate, refine</h2>
+            <p>The essential matrix gives four candidate rotation/translation pairs. I triangulate each match under
+                each candidate and select the pose with the most points at positive depth in both camera frames. A
+                linear DLT estimate initializes Gauss–Newton refinement of the reprojection error.</p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Check</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Linear 3D point difference from expected point</td>
+                            <td>0.00292 (sum of absolute coordinate differences)</td>
+                        </tr>
+                        <tr>
+                            <td>Reprojection-error implementation difference</td>
+                            <td>8.30 &times; 10<sup>-7</sup></td>
+                        </tr>
+                        <tr>
+                            <td>Jacobian implementation difference</td>
+                            <td>1.82 &times; 10<sup>-8</sup></td>
+                        </tr>
+                        <tr>
+                            <td>Unit-test reprojection error, linear estimate</td>
+                            <td>98.74</td>
+                        </tr>
+                        <tr>
+                            <td>Unit-test reprojection error, nonlinear estimate</td>
+                            <td>95.59</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <figure class="result portrait">
+                <a href="./results/p4_3dCloud.png"><img src="./results/p4_3dCloud.png"
+                        alt="Dense black 3D point cloud reconstructed from five statue images"></a>
+                <figcaption>Dense structure-from-motion reconstruction of the statue from five views. It is a point
+                    cloud, not a textured surface; rotate the interactive result to inspect its depth.</figcaption>
+            </figure>
+            <p>A larger scene such as a house is harder because it needs more overlapping views and reliable tracks
+                across a wider range of viewpoints. Occlusion, repeated textures, viewpoint and scale changes, and
+                accumulated camera-pose error can all produce mismatches or drift. More cameras and points also make
+                triangulation and bundle adjustment more computationally demanding.</p>
+        </section>
+
+        <section class="report-section" id="reflection">
+            <p class="eyebrow">Takeaway</p>
+            <h2>Geometry links local matches to global shape</h2>
+            <p>Epipolar constraints reduce correspondence search to a line; rectification makes that line horizontal.
+                Factorization recovers an affine approximation from multiple views, while calibrated projective
+                cameras and triangulation recover a more complete 3D structure. Each step depends on the quality and
+                consistency of the image correspondences.</p>
+        </section>
+
+        <section class="report-section references" id="references">
+            <h2>References &amp; implementation</h2>
+            <ul>
+                <li>SYDE 671 Assignment 4, adapted from Stanford CS231A.</li>
+                <li>Tomasi and Kanade, “Shape and Motion from Image Streams under Orthography: a Factorization Method.”
+                </li>
+                <li>Hartley and Zisserman, <cite>Multiple View Geometry in Computer Vision</cite>.</li>
+            </ul>
+            <p><a href="https://github.com/n-zhao12/SYDE671-assignments/tree/main/Assignment4">Assignment 4 source code
+                    and data</a></p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container"><a href="../index.html">&larr; Course portfolio</a><a href="#p1">Back to top &uarr;</a>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -34,8 +34,9 @@ def compute_H(e, im):
 
     cosine = centered_epipole[0] / radius
     sine = centered_epipole[1] / radius
-    R = np.array([[cosine, sine, 0],
-                  [-sine, cosine, 0],
+    alpha = 1 if centered_epipole[0] >= 0 else -1
+    R = np.array([[alpha * cosine, alpha * sine, 0],
+                  [-alpha * sine, alpha * cosine, 0],
                   [0, 0, 1]], dtype=float)
     rotated_epipole = R @ centered_epipole
     G = np.eye(3)

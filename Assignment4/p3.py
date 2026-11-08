@@ -30,6 +30,8 @@ def factorization_method(points_im1, points_im2):
     root_singular_values = np.diag(np.sqrt(singular_values[:3]))
     motion = U[:, :3] @ root_singular_values
     structure = root_singular_values @ Vt[:3, :]
+    raw_motion = motion.copy()
+    raw_structure = structure.copy()
 
     def quadratic_coefficients(first, second):
         return np.array([
@@ -52,6 +54,8 @@ def factorization_method(points_im1, points_im2):
     constraints = np.asarray(constraints)
     constraints /= np.linalg.norm(constraints, axis=1, keepdims=True)
 
+    isotropic_metric = np.array([1/3, 0, 0, 1/3, 0, 1/3])
+
     def metric_residual(parameters):
         L = np.array([[np.exp(parameters[0]), 0, 0],
                       [parameters[1], np.exp(parameters[2]), 0],
@@ -60,7 +64,8 @@ def factorization_method(points_im1, points_im2):
         metric /= np.trace(metric)
         q = np.array([metric[0, 0], metric[0, 1], metric[0, 2],
                       metric[1, 1], metric[1, 2], metric[2, 2]])
-        return constraints @ q
+        return np.concatenate((constraints @ q,
+                       0.03 * (q - isotropic_metric)))
 
     metric_fit = least_squares(metric_residual, np.zeros(6))
     parameters = metric_fit.x
@@ -69,6 +74,11 @@ def factorization_method(points_im1, points_im2):
                   [parameters[3], parameters[4], np.exp(parameters[5])]])
     metric = L @ L.T
     metric /= np.trace(metric) / 3
+    metric_eigenvalues = np.linalg.eigvalsh(metric)
+    constraint_error = np.linalg.norm(metric_residual(parameters)[:len(constraints)])
+    if metric_eigenvalues[0] <= 0 or metric_eigenvalues[-1] / metric_eigenvalues[0] > 100 or constraint_error > 0.05:
+        return raw_structure, raw_motion
+
     upgrade = np.linalg.cholesky(metric)
     motion = motion @ upgrade
     structure = np.linalg.solve(upgrade, structure)
