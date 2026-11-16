@@ -269,7 +269,7 @@ if __name__ == '__main__':
     # Construct the dense matching
     camera_matrices = np.zeros((2,3,4))
     dense_structure = np.zeros((0,3))
-    for i in range(len(dense_matches)):
+    for i in range(len(frames)-1):
         matches = dense_matches[i]
         camera_matrices[0,:,:] = merged_frame.K.dot(
             merged_frame.motion[i,:,:])
@@ -284,6 +284,7 @@ if __name__ == '__main__':
 
     fig = plt.figure(figsize=(10,10))
     ax = fig.add_subplot(111, projection='3d')
+    ax = fig.gca()
     ax.scatter(dense_structure[:,0], dense_structure[:,1], dense_structure[:,2],
         c='k', depthshade=True, s=2)
     ax.set_xlim(-5, 5)
@@ -292,3 +293,4 @@ if __name__ == '__main__':
     ax.view_init(-100, 90)
 
     plt.show()
+    

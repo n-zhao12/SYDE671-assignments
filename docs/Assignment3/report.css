@@ -245,6 +245,11 @@
     white-space: nowrap;
 }
 
+.matrix-3x3 .matrix-rows {
+    grid-template-columns: repeat(3, max-content);
+    gap: 7px 14px;
+}
+
 .vector-rows {
     display: grid;
     grid-auto-rows: minmax(19px, auto);

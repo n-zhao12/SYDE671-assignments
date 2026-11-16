@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import least_squares
+from scipy.optimize import minimize_scalar
 from skimage.io import imread
 import matplotlib.pyplot as plt
 import scipy.io as sio
@@ -21,17 +21,16 @@ Returns:
 def factorization_method(points_im1, points_im2):
     if points_im1.shape != points_im2.shape or points_im1.ndim != 2 or points_im1.shape[1] != 3:
         raise ValueError('Both point arrays must have the same Nx3 shape')
-    if points_im1.shape[0] < 3:
-        raise ValueError('At least three point correspondences are required')
+    if points_im1.shape[0] < 4:
+        raise ValueError('At least four point correspondences are required')
 
     measurement = np.vstack((points_im1[:, :2].T, points_im2[:, :2].T)).astype(float)
     measurement -= measurement.mean(axis=1, keepdims=True)
     U, singular_values, Vt = np.linalg.svd(measurement, full_matrices=False)
+    print('Measurement matrix singular values:', singular_values)
     root_singular_values = np.diag(np.sqrt(singular_values[:3]))
     motion = U[:, :3] @ root_singular_values
     structure = root_singular_values @ Vt[:3, :]
-    raw_motion = motion.copy()
-    raw_structure = structure.copy()
 
     def quadratic_coefficients(first, second):
         return np.array([
@@ -43,43 +42,54 @@ def factorization_method(points_im1, points_im2):
             first[2] * second[2]])
 
     constraints = []
+    values = []
     for camera in range(2):
         first_row, second_row = motion[2*camera], motion[2*camera + 1]
-        constraints.append(quadratic_coefficients(first_row, second_row))
-        constraints.append(quadratic_coefficients(first_row, first_row) -
-                           quadratic_coefficients(second_row, second_row))
-    constraints.append(quadratic_coefficients(motion[0], motion[0]) -
-                       quadratic_coefficients(motion[2], motion[2]))
+        constraints.extend((quadratic_coefficients(first_row, first_row),
+                            quadratic_coefficients(second_row, second_row),
+                            quadratic_coefficients(first_row, second_row)))
+        values.extend((1, 1, 0))
 
-    constraints = np.asarray(constraints)
-    constraints /= np.linalg.norm(constraints, axis=1, keepdims=True)
+    coefficients = np.asarray(constraints)
+    metric_parameters, _, _, _ = np.linalg.lstsq(coefficients, values, rcond=None)
 
-    isotropic_metric = np.array([1/3, 0, 0, 1/3, 0, 1/3])
+    _, _, coefficient_right = np.linalg.svd(coefficients, full_matrices=True)
+    coefficient_rank = np.linalg.matrix_rank(coefficients)
+    null_space = coefficient_right[coefficient_rank:, :].T
 
-    def metric_residual(parameters):
-        L = np.array([[np.exp(parameters[0]), 0, 0],
-                      [parameters[1], np.exp(parameters[2]), 0],
-                      [parameters[3], parameters[4], np.exp(parameters[5])]])
-        metric = L @ L.T
-        metric /= np.trace(metric)
-        q = np.array([metric[0, 0], metric[0, 1], metric[0, 2],
-                      metric[1, 1], metric[1, 2], metric[2, 2]])
-        return np.concatenate((constraints @ q,
-                       0.03 * (q - isotropic_metric)))
+    def metric_from_parameters(parameters):
+        return np.array([[parameters[0], parameters[1], parameters[2]],
+                         [parameters[1], parameters[3], parameters[4]],
+                         [parameters[2], parameters[4], parameters[5]]])
 
-    metric_fit = least_squares(metric_residual, np.zeros(6))
-    parameters = metric_fit.x
-    L = np.array([[np.exp(parameters[0]), 0, 0],
-                  [parameters[1], np.exp(parameters[2]), 0],
-                  [parameters[3], parameters[4], np.exp(parameters[5])]])
-    metric = L @ L.T
-    metric /= np.trace(metric) / 3
-    metric_eigenvalues = np.linalg.eigvalsh(metric)
-    constraint_error = np.linalg.norm(metric_residual(parameters)[:len(constraints)])
-    if metric_eigenvalues[0] <= 0 or metric_eigenvalues[-1] / metric_eigenvalues[0] > 100 or constraint_error > 0.05:
-        return raw_structure, raw_motion
+    if null_space.shape[1] == 1:
+        null_direction = null_space[:, 0]
+        search_radius = 10 * max(np.linalg.norm(metric_parameters), 1e-3)
+        candidates = np.linspace(-search_radius, search_radius, 1001)
 
-    upgrade = np.linalg.cholesky(metric)
+        def metric_condition(offset):
+            eigenvalues = np.linalg.eigvalsh(
+                metric_from_parameters(metric_parameters + offset * null_direction))
+            if eigenvalues[0] <= 0:
+                return np.inf
+            return eigenvalues[-1] / eigenvalues[0]
+
+        candidate_conditions = np.array([metric_condition(offset) for offset in candidates])
+        best_index = int(np.argmin(candidate_conditions))
+        if np.isfinite(candidate_conditions[best_index]):
+            lower = candidates[max(best_index - 1, 0)]
+            upper = candidates[min(best_index + 1, len(candidates) - 1)]
+            if lower < upper:
+                fit = minimize_scalar(metric_condition, bounds=(lower, upper), method='bounded')
+                metric_parameters = metric_parameters + fit.x * null_direction
+
+    metric = metric_from_parameters(metric_parameters)
+    eigenvalues, eigenvectors = np.linalg.eigh(metric)
+    if eigenvalues[0] > 0:
+        upgrade = np.linalg.cholesky(metric)
+    else:
+        eigenvalue_floor = max(eigenvalues[-1] * 1e-2, np.finfo(float).eps)
+        upgrade = eigenvectors @ np.diag(np.sqrt(np.maximum(eigenvalues, eigenvalue_floor))) @ eigenvectors.T
     motion = motion @ upgrade
     structure = np.linalg.solve(upgrade, structure)
     return structure, motion

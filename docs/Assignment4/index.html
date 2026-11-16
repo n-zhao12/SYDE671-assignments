@@ -47,10 +47,11 @@
             <p class="eyebrow">Part 1 &middot; Fundamental matrix</p>
             <h2>Correspondences constrain epipolar lines</h2>
             <p>For matched homogeneous points, the fundamental matrix satisfies
-                <code>p2.T @ F @ p1 = 0</code>. I formed the eight-point design matrix, solved its least-squares
-                nullspace with SVD, and set the smallest singular value of <code>F</code> to zero. The normalized
+                <var>p</var><sub>2</sub><sup>T</sup><var>F</var><var>p</var><sub>1</sub> = 0. I formed the eight-point
+                design matrix, solved its least-squares
+                nullspace with SVD, and set the smallest singular value of <var>F</var> to zero. The normalized
                 version first translates each point set to its centroid and scales its mean distance to
-                <code>sqrt(2)</code>, then denormalizes the estimated matrix.
+                <var>&radic;2</var>, then denormalizes the estimated matrix.
             </p>
 
             <div class="table-wrap">
@@ -61,7 +62,7 @@
                             <th>Method</th>
                             <th>Image 1 mean distance</th>
                             <th>Image 2 mean distance</th>
-                            <th>Maximum |p2.T F p1|</th>
+                            <th>Maximum |<var>p</var><sub>2</sub><sup>T</sup><var>F</var><var>p</var><sub>1</sub>|</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -70,7 +71,7 @@
                             <td>LLS</td>
                             <td>28.03 px</td>
                             <td>25.16 px</td>
-                            <td>Not recorded</td>
+                            <td>0.6635</td>
                         </tr>
                         <tr>
                             <td>set1</td>
@@ -84,7 +85,7 @@
                             <td>LLS</td>
                             <td>9.70 px</td>
                             <td>14.57 px</td>
-                            <td>Not recorded</td>
+                            <td>0.2054</td>
                         </tr>
                         <tr>
                             <td>set2</td>
@@ -96,28 +97,78 @@
                     </tbody>
                 </table>
             </div>
-            <p>The point-to-line distances are average perpendicular distances in pixels. Normalization greatly
-                improves the estimates on both sets. The algebraic residual is scale-dependent and is not a pixel
-                error.</p>
+            <p>For each match, I compute the corresponding epipolar line (for image 1,
+                <var>F</var><sup>T</sup><var>p</var><sub>2</sub>) and average its perpendicular distance to the
+                image point in pixels:
+            </p>
+            <div class="equation" role="math"
+                aria-label="Point to line distance equals absolute a x plus b y plus c divided by the square root of a squared plus b squared">
+                <var>d</var> = |<var>a</var><var>x</var> + <var>b</var><var>y</var> + <var>c</var>| /
+                &radic;(<var>a</var><sup>2</sup> + <var>b</var><sup>2</sup>)
+            </div>
+            <p>Normalization greatly improves the estimates on both sets. The algebraic residual is scale-dependent
+                and is not a pixel error.</p>
 
-            <details>
+            <details open>
                 <summary>Fundamental matrices (full precision)</summary>
                 <h3>set1 &middot; LLS</h3>
-                <pre class="equation"><code>[[ 1.55218081e-06, -8.18161523e-06, -1.50440111e-03],
- [-5.86997052e-06, -3.02892219e-07, -1.13607605e-02],
- [-3.52312036e-03,  1.41453881e-02,  9.99828068e-01]]</code></pre>
+                <div class="matrix-equation matrix-3x3" role="math"
+                    aria-label="Set 1 linear least-squares fundamental matrix">
+                    <span class="matrix-name"><var>F</var> =</span>
+                    <div class="matrix-bracket" aria-hidden="true">
+                        <div class="matrix-rows">
+                            <span>1.55218081 &times; 10<sup>&minus;6</sup></span><span>&minus;8.18161523 &times;
+                                10<sup>&minus;6</sup></span><span>&minus;1.50440111 &times; 10<sup>&minus;3</sup></span>
+                            <span>&minus;5.86997052 &times; 10<sup>&minus;6</sup></span><span>&minus;3.02892219 &times;
+                                10<sup>&minus;7</sup></span><span>&minus;1.13607605 &times; 10<sup>&minus;2</sup></span>
+                            <span>&minus;3.52312036 &times; 10<sup>&minus;3</sup></span><span>1.41453881 &times;
+                                10<sup>&minus;2</sup></span><span>9.99828068 &times; 10<sup>&minus;1</sup></span>
+                        </div>
+                    </div>
+                </div>
                 <h3>set1 &middot; normalized</h3>
-                <pre class="equation"><code>[[ 4.45505557e-06, -3.63935568e-05,  6.03119338e-04],
- [-3.35055836e-05, -2.32218046e-06, -4.39148773e-02],
- [-5.84762546e-03,  6.03085864e-02,  9.97195967e-01]]</code></pre>
+                <div class="matrix-equation matrix-3x3" role="math" aria-label="Set 1 normalized fundamental matrix">
+                    <span class="matrix-name"><var>F</var> =</span>
+                    <div class="matrix-bracket" aria-hidden="true">
+                        <div class="matrix-rows">
+                            <span>4.45505557 &times; 10<sup>&minus;6</sup></span><span>&minus;3.63935568 &times;
+                                10<sup>&minus;5</sup></span><span>6.03119338 &times; 10<sup>&minus;4</sup></span>
+                            <span>&minus;3.35055836 &times; 10<sup>&minus;5</sup></span><span>&minus;2.32218046 &times;
+                                10<sup>&minus;6</sup></span><span>&minus;4.39148773 &times; 10<sup>&minus;2</sup></span>
+                            <span>&minus;5.84762546 &times; 10<sup>&minus;3</sup></span><span>6.03085864 &times;
+                                10<sup>&minus;2</sup></span><span>9.97195967 &times; 10<sup>&minus;1</sup></span>
+                        </div>
+                    </div>
+                </div>
                 <h3>set2 &middot; LLS</h3>
-                <pre class="equation"><code>[[-5.63087200e-06,  2.74976583e-05, -6.42650411e-03],
- [-2.77622828e-05, -6.74748522e-06,  1.52182033e-02],
- [ 1.07623595e-02, -1.22519240e-02, -9.99730547e-01]]</code></pre>
+                <div class="matrix-equation matrix-3x3" role="math"
+                    aria-label="Set 2 linear least-squares fundamental matrix">
+                    <span class="matrix-name"><var>F</var> =</span>
+                    <div class="matrix-bracket" aria-hidden="true">
+                        <div class="matrix-rows">
+                            <span>&minus;5.63087200 &times; 10<sup>&minus;6</sup></span><span>2.74976583 &times;
+                                10<sup>&minus;5</sup></span><span>&minus;6.42650411 &times; 10<sup>&minus;3</sup></span>
+                            <span>&minus;2.77622828 &times; 10<sup>&minus;5</sup></span><span>&minus;6.74748522 &times;
+                                10<sup>&minus;6</sup></span><span>1.52182033 &times; 10<sup>&minus;2</sup></span>
+                            <span>1.07623595 &times; 10<sup>&minus;2</sup></span><span>&minus;1.22519240 &times;
+                                10<sup>&minus;2</sup></span><span>&minus;9.99730547 &times; 10<sup>&minus;1</sup></span>
+                        </div>
+                    </div>
+                </div>
                 <h3>set2 &middot; normalized</h3>
-                <pre class="equation"><code>[[-1.33351218e-05,  2.22048310e-04, -1.37802168e-02],
- [ 3.20320025e-04,  2.83731330e-05,  6.19621780e-01],
- [ 2.08672226e-02, -7.52241693e-01, -2.22656232e-01]]</code></pre>
+                <div class="matrix-equation matrix-3x3" role="math" aria-label="Set 2 normalized fundamental matrix">
+                    <span class="matrix-name"><var>F</var> =</span>
+                    <div class="matrix-bracket" aria-hidden="true">
+                        <div class="matrix-rows">
+                            <span>&minus;1.33351218 &times; 10<sup>&minus;5</sup></span><span>2.22048310 &times;
+                                10<sup>&minus;4</sup></span><span>&minus;1.37802168 &times; 10<sup>&minus;2</sup></span>
+                            <span>3.20320025 &times; 10<sup>&minus;4</sup></span><span>2.83731330 &times;
+                                10<sup>&minus;5</sup></span><span>6.19621780 &times; 10<sup>&minus;1</sup></span>
+                            <span>2.08672226 &times; 10<sup>&minus;2</sup></span><span>&minus;7.52241693 &times;
+                                10<sup>&minus;1</sup></span><span>&minus;2.22656232 &times; 10<sup>&minus;1</sup></span>
+                        </div>
+                    </div>
+                </div>
             </details>
 
             <div class="comparison-grid">
@@ -149,15 +200,28 @@
         <section class="report-section" id="p2">
             <p class="eyebrow">Part 2 &middot; Image rectification</p>
             <h2>Make corresponding epipolar lines horizontal</h2>
-            <p>The epipoles are the null vectors of <code>F.T</code> and <code>F</code>. To construct the second
-                image homography, I translate the image center to the origin, rotate the epipole onto the horizontal
-                axis using the sign factor <code>alpha</code>, and apply a projective transform that sends it to
-                infinity. I then use the point correspondences to solve the remaining matching-homography parameters
-                with least squares.</p>
-            <p>For set1, the epipoles are approximately <code>e1 = (-1300.79, -142.66, 1)</code> and
-                <code>e2 = (1654.22, 45.43, 1)</code>. In a shared rectified coordinate frame, corresponding points
-                have a mean vertical difference of <code>0.86 px</code> (maximum <code>3.87 px</code>); the
-                transformed fundamental matrix has the expected horizontal-epipolar form.
+            <p>The epipoles are the null vectors satisfying
+                <var>F</var><sup>T</sup><var>e</var><sub>1</sub> = 0 and <var>F</var><var>e</var><sub>2</sub> = 0.
+                To construct the second image homography, I translate the image center to the origin, rotate the
+                epipole onto the horizontal axis using the sign factor <var>&alpha;</var>, and apply a projective
+                transform that sends it to infinity. For the matching homography, I use the course-note form:
+            </p>
+            <div class="equation" role="math"
+                aria-label="M equals the skew-symmetric cross product matrix of e2 times F plus e2 v transpose, where v transpose is one one one">
+                <var>M</var> = [<var>e</var><sub>2</sub>]<sub>&times;</sub><var>F</var> +
+                <var>e</var><sub>2</sub><var>v</var><sup>T</sup>, &nbsp;
+                <var>v</var><sup>T</sup> = [1, 1, 1]
+            </div>
+            <p>I solve a least-squares problem over the point correspondences for the parameters of
+                <var>H</var><sub>A</sub>, then form:
+            </p>
+            <div class="equation" role="math" aria-label="H1 equals HA times H2 times M">
+                <var>H</var><sub>1</sub> = <var>H</var><sub>A</sub><var>H</var><sub>2</sub><var>M</var>
+            </div>
+            <p>For set1, the epipoles are approximately
+                <var>e</var><sub>1</sub> = (&minus;1300.79, &minus;142.66, 1) and
+                <var>e</var><sub>2</sub> = (1654.22, 45.43, 1). The transformed fundamental matrix has the expected
+                horizontal-epipolar form, as shown in the rectified pair below.
             </p>
             <figure class="result">
                 <a href="./results/p2.png"><img src="./results/p2.png"
@@ -171,11 +235,33 @@
             <p class="eyebrow">Part 3 &middot; Factorization</p>
             <h2>Recover affine shape and camera motion</h2>
             <p>I center the four-row measurement matrix and retain its leading three singular components to obtain a
-                rank-three motion/structure factorization. The metric upgrade estimates a positive-definite metric
-                from orthographic row constraints with a weak isotropic prior. For the sparse subset, those
-                constraints become ill-conditioned, so the implementation retains the rank-three factorization
-                instead of applying an unstable upgrade. Reconstructions can differ from ground truth by scale and
-                rotation; fewer correspondences also make the subset less stable.</p>
+                rank-three motion/structure factorization. For the metric upgrade, I solve the six linear constraints
+                from the two views for the six independent entries of the symmetric matrix
+                <var>A</var> = <var>Q</var><var>Q</var><sup>T</sup>.
+                When the equations leave a one-dimensional nullspace, I choose the positive-definite solution with
+                the lowest condition number, without using the ground truth. I factor the metric with Cholesky when
+                it is positive definite; if no positive-definite nullspace solution is available, I floor its
+                eigenvalues at 1% of the largest eigenvalue. The motion and structure are then upgraded with
+                <var>Q</var> and <var>Q</var><sup>&minus;1</sup>.
+            </p>
+            <p>For the full set, the factorized point cloud captures the broad 3D arrangement of the ground truth.
+                The two clouds are not plotted in a shared coordinate frame, so their orientation and scale need not
+                match directly; the factorization is inherently ambiguous up to a global similarity transform. Any
+                remaining differences after accounting for that transform come from measurement noise and the
+                approximate metric upgrade.</p>
+            <p>The TA note distinguishes the minimum point geometry from practical stability: four non-coplanar
+                points are needed for a centered point cloud to span 3D, while additional well-distributed points and
+                camera views improve robustness. Our two-view subset has 18 points, but its ground-truth points are
+                nearly planar: the singular values of its centered 3D coordinates are approximately
+                <code>17.28, 14.18, 0.38</code>. Its small depth spread makes the recovered depth especially
+                sensitive to noise, which explains why its shape does not align as well by eye as the full set.
+                This is not just a global rotation or scale difference.
+            </p>
+            <p>There are six metric equations from two views, but for these measurements the six-by-six
+                constraint matrix has numerical rank five. Thus the metric upgrade is not uniquely determined.
+                The implementation selects a positive-definite candidate with a low condition number along the
+                remaining null direction; if it cannot find one, it floors small eigenvalues as a numerical fallback.
+                This selection is a practical heuristic, not information supplied by the two images.</p>
             <div class="table-wrap">
                 <table>
                     <thead>
@@ -196,10 +282,14 @@
                     </tbody>
                 </table>
             </div>
-            <p>The ideal affine orthographic measurement matrix has rank three, so its fourth singular value is zero.
-                Here it is nonzero because the measured points contain noise and the real camera motion is not
-                perfectly affine/orthographic. In the subset, the third and fourth singular values are both much
-                smaller relative to the first two, reflecting the loss of geometric information.</p>
+            <p>The centered measurement matrix has four rows, so measured data can have four nonzero singular
+                values. Under the ideal affine orthographic model it factors through a three-dimensional structure,
+                giving rank at most three; the fourth singular value would be zero. In practice it is nonzero because
+                of measurement noise and departures from ideal orthographic projection. For the subset, the third
+                and fourth values are both small relative to the first two and close to each other
+                (<var>&sigma;</var><sub>4</sub>/<var>&sigma;</var><sub>3</sub> = 0.71, versus 0.15 for the full set),
+                so the rank-three
+                approximation is less clearly separated from the discarded component.</p>
             <div class="comparison-grid">
                 <figure class="result">
                     <a href="./results/p3_1.png"><img src="./results/p3_1.png"
@@ -210,8 +300,9 @@
                 <figure class="result">
                     <a href="./results/p3_2.png"><img src="./results/p3_2.png"
                             alt="Three-dimensional subset factorization result beside ground-truth points"></a>
-                    <figcaption>set1 subset &middot; With fewer matches, the recovered shape is less stable and less
-                        similar to ground truth.</figcaption>
+                    <figcaption>set1 subset &middot; This set is above the theoretical point-count minimum, but its
+                        smaller, less informative measurement spectrum makes the recovered shape more sensitive to
+                        noise.</figcaption>
                 </figure>
             </div>
         </section>
@@ -279,6 +370,8 @@
             <h2>References &amp; implementation</h2>
             <ul>
                 <li>SYDE 671 Assignment 4, adapted from Stanford CS231A.</li>
+                <li>Course teaching assistant, handwritten note on affine structure-from-motion ambiguity and
+                    factorization constraints, provided with the assignment.</li>
                 <li>Tomasi and Kanade, “Shape and Motion from Image Streams under Orthography: a Factorization Method.”
                 </li>
                 <li>Hartley and Zisserman, <cite>Multiple View Geometry in Computer Vision</cite>.</li>

@@ -50,15 +50,10 @@ def compute_matching_homographies(e2, F, im2, points1, points2):
                         [e2[2], 0, -e2[0]],
                         [-e2[1], e2[0], 0]])
     base_mapping = skew_e2 @ F
-    base_points_h = (H2 @ base_mapping @ points1.T).T
     target_points_h = (H2 @ points2.T).T
     target_points = target_points_h / target_points_h[:, 2, None]
 
-    epipole_scale = (H2 @ e2)[0]
-    if abs(epipole_scale) < 1e-12:
-        raise ValueError('Rectified epipole has no horizontal component')
-    rhs = target_points[:, 0] * base_points_h[:, 2] - base_points_h[:, 0]
-    v, _, _, _ = np.linalg.lstsq(points1, rhs / epipole_scale, rcond=None)
+    v = np.ones(3)
     M = base_mapping + np.outer(e2, v)
 
     rectified1_h = (H2 @ M @ points1.T).T
